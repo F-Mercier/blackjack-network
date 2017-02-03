@@ -67,21 +67,7 @@ int main(int argc, char** argv){
     exit(1);
   }
 
-  int waiting_table = 0; // there is no table which waits for players either because all are full or no table whatsoever
-  int players_no = 0;
-  //int tables_pid[100];//maximum number of tables
-  //int pid_ind = -1;// currently no table
-  int pid;
-  int mpipefd[2];
-  int fpipefd[2];
-  
-  //for(int i=0; i<100;i++) tables_pid[i] = 0;// initalize the pid of every table to zero
-
-  if(pipe(mpipefd) == -1){
-    fprintf(stderr, "pipe: unable to create pipe\n");
-    exit(1);
-  }
-  
+ 
   while(1){
     sin_size = sizeof(client_addrs);
     new_sockfd = accept(sockfd,(struct sockaddr*) client_addrs, sin_size);

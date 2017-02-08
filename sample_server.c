@@ -15,7 +15,6 @@
 
 void* run_thread(void* sockfd){
   int sfd = *((int*)sockfd);
-  printf("hello from client %d\n");
 
   char* init_msg = "req: pseudo";
   if(send(sfd,init_msg,strlen(init_msg),0) == -1){
@@ -116,7 +115,6 @@ int main(int argc, char** argv){
     printf("accepted\n");
 
     rc = pthread_create(&thread,&att, run_thread , &new_sockfd);
-    printf("thread created\n");
     if (rc){
       printf("ERROR; return code from pthread_create() is %d\n", rc);
       exit(-1);

@@ -13,6 +13,8 @@
 #define BACKLOG 20
 #define MAXDATASIZE 100
 
+
+// This function is executed in every thread and should contain the logic of the player
 void* run_thread(void* sockfd){
   int sfd = *((int*)sockfd);
 

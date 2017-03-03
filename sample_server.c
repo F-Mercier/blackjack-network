@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h> 
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -8,6 +9,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <pthread.h>
+
+#include "threads_manager.h"
 
 #define PORT "5000"
 #define BACKLOG 20

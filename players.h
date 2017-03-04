@@ -18,12 +18,12 @@ typedef struct player{
  *structure containing all infos about a particular instance of the game
  * it includes all players at a "blackjack table" plus additional infos
  */
-typedef struct players_table{
-  int curr_no_players; //current number of players at this table
+typedef struct blackjack_table{
+  int number_of_players; //current number of players at this table
   int size; // size of the table (necessary for the loops)
-  player** p; // array of players
+  player** players; // array of players
   int full; //boolean: 1 - table is full ; 0 - table is not yet full
-}players_table;
+}blackjack_table;
 
 /*
  *initialize a player structure
@@ -37,14 +37,14 @@ player* init_player(int socket_fd, pseudo_db* pb);
  * argument size is passed by thread manager's max no of players at a table
  *return a pointer to a new created player_table
  */
-players_table* init_players_table(int size);
+blackjack_table* init_blackjack_table(int size);
 
 /*
  *add a completly created player to a player_table
  *this method is called by thread_manager add_player method when adding a player as a mean to encapsulate structure logic
  * return -1 if pt is already full and a player cannont be added or 1 if it succeeds
  */
-int add_player_to_table(players_table* pt, player* p);
+int add_player_to_table(blackjack_table* pt, player* p);
 
 /*
  *removes the selected player from the player_table becouse either client disconnected or game ended and the clent had chosen to close the app
@@ -52,7 +52,7 @@ int add_player_to_table(players_table* pt, player* p);
  *returns -1 if an error occured like there is no such player at that table
  *returns 1 on success
  */
-int remove_player_from_table(players_table* pt, player* p);
+int remove_player_from_table(blackjack_table* pt, player* p);
 
 /*
  *check if a client is connected

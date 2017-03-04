@@ -57,7 +57,7 @@ void* run_thread(void* args){
   
   player* p = init_player(socket_fd,pb);
   add_player(tm,p);
-  print_players_table_array(tm);
+  print_blackjack_tables(tm);
   print_pseudos(pb);
 
   while(1){

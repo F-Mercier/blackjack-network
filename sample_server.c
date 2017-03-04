@@ -84,7 +84,7 @@ int main(int argc, char** argv){
     return 1;
   }
 
-  threads_manager* tm = init_th_manager(100,5);
+  threads_manager* tm = init_th_manager(100,atoi(argv[1]));
   pseudo_db* pb = init_pseudo_db(100);
 
   data thread_data;

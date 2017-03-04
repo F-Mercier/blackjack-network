@@ -37,7 +37,7 @@ void increase_size(threads_manager* tm);
 void add_blackjack_table(threads_manager* tm);
 
 /*
- *removes the content of te selected player_table along with all the players
+ *removes the content of the selected player_table along with all the players
  *param table_no is the number of the "blackjack table" to delete
  *return 1 on success, else -1
  */
@@ -57,7 +57,7 @@ int add_player(threads_manager* tm, player* p);
  * is called by check_clients_connectivity when a client is disconnected
  * return -1 if there is no such player, else it returns 1 
  */
-int remove_player(threads_manager* tm, int table_no, player* p);
+int remove_player(threads_manager* tm, int table_no, player* p, pseudo_db* pb);
 
 /**
  *scan all clients on selected players_table for connectivity
@@ -65,7 +65,7 @@ int remove_player(threads_manager* tm, int table_no, player* p);
  * returns -1 if there is an error
  * returns 1 if there is no client disconnected or there is a disconnected client and it was removed succesfully
  */
-int check_clients_connectivity(threads_manager* tm,int table_no,int timeout);
+int check_client_connectivity(threads_manager* tm, int table_no, player* p, pseudo_db* pb, int timeout);
 
 
 /**

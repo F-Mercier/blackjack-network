@@ -73,18 +73,22 @@ int add_player(threads_manager* tm, player* p){
   return tm->index - 1;
 }
   
-int remove_player(threads_manager* tm,int table_no, player* p){
-  if(remove_player_from_table(tm->tables[table_no],p) == -1) return -1;
+int remove_player(threads_manager* tm,int table_no, player* p, pseudo_db* pb){
+  if(remove_player_from_table(tm->tables[table_no],p,pb) == -1) return -1;
   else return 1;
 }
 
 
-int check_clients_connectivity(threads_manager* tm, int table_no, int timeout){
+ int check_client_connectivity(threads_manager* tm, int table_no, player* p, pseudo_db* pb, int timeout){
   for(int i = 0; i<tm->tables[table_no]->number_of_players; i++){
-    if(check_connectivity(tm->tables[table_no]->players[i],timeout) == 0){
-      remove_player(tm,table_no,tm->tables[table_no]->players[i]);
-    }else if(check_connectivity(tm->tables[table_no]->players[i],timeout) == -1){
-      return -1;
+    if(p == tm->tables[table_no]->players[i]){
+      if(check_connectivity(tm->tables[table_no]->players[i],timeout) == 0){
+        printf("before removing player\n");
+        remove_player(tm,table_no,tm->tables[table_no]->players[i],pb);
+	break;
+      }else if(check_connectivity(tm->tables[table_no]->players[i],timeout) == -1){
+        return -1;
+      }
     }
   }
   return 1;

@@ -52,7 +52,7 @@ int add_player_to_table(blackjack_table* pt, player* p);
  *returns -1 if an error occured like there is no such player at that table
  *returns 1 on success
  */
-int remove_player_from_table(blackjack_table* pt, player* p);
+int remove_player_from_table(blackjack_table* pt, player* p, pseudo_db* pb);
 
 /*
  *check if a client is connected

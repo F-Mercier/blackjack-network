@@ -18,7 +18,7 @@
 
 pthread_mutex_t mutex;
 
-
+// structure used to pass as argument in thread function
 struct data_s{
   int* socket_fd;
   threads_manager* tm;
@@ -29,30 +29,36 @@ typedef struct data_s data;
 
 // This function is executed in every thread and should contain the logic of the player
 void* run_thread(void* args){
-  
+
+  //extract useful data from the args argument 
   data* d = (data*)args;
   int socket_fd = *(d->socket_fd);
   threads_manager* tm =  d->tm;
   pseudo_db* pb = d->pb;
  
-  
+  //create a new player containig the socket descriptor and his pseudo
   player* p = init_player(socket_fd,pb);
   pthread_mutex_lock(&mutex);
+  //add player to a blackjack table
   int table_no = add_player(tm,p);
   pthread_mutex_unlock(&mutex);
+  
   print_blackjack_tables(tm);
   //print_pseudos(pb);
 
   //test if check connection works
   pthread_mutex_lock(&mutex);
-  check_clients_connectivity(tm,table_no,2);
+
+  check_client_connectivity(tm,table_no,p,pb,2);
   pthread_mutex_unlock(&mutex);
 
   while(1){
+    system("clear");
     pthread_mutex_lock(&mutex);
-    check_clients_connectivity(tm,table_no,2);
+    check_client_connectivity(tm,table_no,p,pb,2);
     pthread_mutex_unlock(&mutex);
     print_blackjack_tables(tm);
+    sleep(1);//wait 1 second between rechecks
   }
   
   pthread_exit(NULL);
@@ -139,10 +145,12 @@ int main(int argc, char** argv){
     
 
     printf("accepted\n");
+
+    //initialize the data we pass into the function executed in each thread
     thread_data.socket_fd = &new_sockfd;
     thread_data.tm = tm;
     thread_data.pb = pb;
-    
+
     rc = pthread_create(&thread,&att, run_thread , &thread_data);
     if (rc){
       printf("ERROR; return code from pthread_create() is %d\n", rc);
@@ -152,6 +160,8 @@ int main(int argc, char** argv){
     t++;
 
   }
+
+  //close thread and mutex resources
   pthread_mutex_destroy(&mutex);
   pthread_exit(NULL);
   return 0;

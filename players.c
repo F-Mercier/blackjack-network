@@ -7,6 +7,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 
 #define MAXDATASIZE 100
 
@@ -85,6 +86,7 @@ int add_player_to_table(blackjack_table* pt, player* p){
   }
   if(p == NULL){
     printf("player is null\n");
+    return -1;
   }
   printf("number of players already at the table = %d\n",pt->number_of_players);
   pt->players[pt->number_of_players] = p;
@@ -96,18 +98,25 @@ int add_player_to_table(blackjack_table* pt, player* p){
   return 1;
 }
 
-int remove_player_from_table(blackjack_table* pt, player* p){
+int remove_player_from_table(blackjack_table* pt, player* p, pseudo_db* pb){
   int found = 0;
   for(int i=0; i<pt->size; i++){
     if(p == pt->players[i]){
+      //close the socket descriptor, unbind pseudo and free the player structure
+      close(pt->players[i]->socket_fd);
+      unbind_pseudo(&pb,pt->players[i]->pseudo);
       free(pt->players[i]);
+      
       pt->players[i] = NULL;
       pt->number_of_players--;
       found = 1;
-      for(int j= i; j < pt->size - 1; j++){//FIXME check with curr_no_players
+      for(int j= i; j < pt->size - 1; j++){
 	pt->players[j] = pt->players[j+1];
       }
       pt->players[pt->size - 1] = NULL;
+      if(pt->number_of_players < pt->size){
+	pt->full = 0;
+      }
       break;
     }
   }
@@ -115,7 +124,7 @@ int remove_player_from_table(blackjack_table* pt, player* p){
   else return -1;
 }
 
-//FIXME check if player is NULL
+
 int check_connectivity(player* p, int timeout){
   //printf("\ninside check_connectivity()\n");
   char* isconnected_msg = "req: connected";

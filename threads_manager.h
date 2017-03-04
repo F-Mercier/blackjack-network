@@ -47,8 +47,9 @@ int remove_blackjack_table(threads_manager* tm,int table_no);
  *add a new player(thread) to the thread manager players_table array
  *player already created, and his pseudo is already binded
  *if all players_table are full create a new players_table and add the client there  
+ *return the blackjack table number for this player 
  */
-void add_player(threads_manager* tm, player* p);
+int add_player(threads_manager* tm, player* p);
 
 /**
  * removes a player from the players_table array

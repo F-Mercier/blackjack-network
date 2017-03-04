@@ -83,7 +83,10 @@ int add_player_to_table(blackjack_table* pt, player* p){
     printf("blackjack table is full\n");
     return -1;
   }
-  printf("number of players = %d\n",pt->number_of_players);
+  if(p == NULL){
+    printf("player is null\n");
+  }
+  printf("number of players already at the table = %d\n",pt->number_of_players);
   pt->players[pt->number_of_players] = p;
   pt->number_of_players++;
   if(pt->number_of_players >= pt->size){

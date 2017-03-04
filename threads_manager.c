@@ -59,7 +59,7 @@ int remove_blackjack_table(threads_manager* tm,int table_no){
   return 1;
 }
 
-void add_player(threads_manager* tm, player* p){
+int add_player(threads_manager* tm, player* p){
   printf("\ninside add_player()\n");
   if(tm->index == 0){//there is no allocated table
     printf("first table initialization\n");
@@ -68,7 +68,9 @@ void add_player(threads_manager* tm, player* p){
   if(add_player_to_table(tm->tables[tm->index - 1],p) == -1){
     add_blackjack_table(tm);
     add_player_to_table(tm->tables[tm->index - 1],p);
+    return tm->index - 1;
   }
+  return tm->index - 1;
 }
   
 int remove_player(threads_manager* tm,int table_no, player* p){
@@ -90,11 +92,19 @@ int check_clients_connectivity(threads_manager* tm, int table_no, int timeout){
 
 
 void print_blackjack_tables(threads_manager* tm){
+  printf("\ninside print_blackjack_table\n");
+  printf("number of blackjack tables = %d\n",tm->index); 
   for(int i = 0; i < tm->index ; i++){
-    printf("{ ");
+    printf("Blackjack Table %d :\n{ ",i);
+    //printf("size of the blackjack table = %d\n",tm->tables[i]->size);
+    //printf("number of players already at the table = %d\n",tm->tables[i]->number_of_players);
     for(int j = 0; j < tm->tables[i]->size; j++){
-      printf(" %s:%d ",tm->tables[i]->players[j]->pseudo,tm->tables[i]->players[j]->socket_fd);
+      if(j < tm->tables[i]->number_of_players){
+         printf(" %s:%d ",tm->tables[i]->players[j]->pseudo,tm->tables[i]->players[j]->socket_fd);
+      }else{
+         printf(" empty "); 
+      }
     }
-    printf("}\n");
+    printf("}\n\n");
   }
 }

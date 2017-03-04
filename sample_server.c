@@ -27,28 +27,7 @@ typedef struct data_s data;
 
 // This function is executed in every thread and should contain the logic of the player
 void* run_thread(void* args){
-  /* int sfd = *((int*)sockfd); */
-
-  /* char* init_msg = "req: pseudo"; */
-  /* if(send(sfd,init_msg,strlen(init_msg),0) == -1){ */
-  /*   fprintf(stderr,"send: error while sending : %s\n", strerror(errno)); */
-  /*   exit(1); */
-  /* } */
-
-  /* char readbuf[MAXDATASIZE]; */
-
-  /* int numbytes; */
-
-  /* if((numbytes = recv(sfd,readbuf,MAXDATASIZE-1,0)) == -1){ */
-  /*   fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno)); */
-  /*   exit(1); */
-  /* } */
-
-  /* printf("numbytes =  %d\n", numbytes); */
-  /* readbuf[numbytes] = '\0'; */
-
-  /* printf("connected client has pseudo : %s \n",readbuf); */
-
+  
   data* d = (data*)args;
   int socket_fd = *(d->socket_fd);
   threads_manager* tm =  d->tm;
@@ -56,12 +35,13 @@ void* run_thread(void* args){
  
   
   player* p = init_player(socket_fd,pb);
-  add_player(tm,p);
+  int table_no = add_player(tm,p);
+  printf("you are given the table no %d\n",table_no);
   print_blackjack_tables(tm);
   print_pseudos(pb);
 
   while(1){
-
+    
   }
   
   pthread_exit(NULL);

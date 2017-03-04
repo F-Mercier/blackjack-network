@@ -4,7 +4,7 @@
 #include "threads_manager.h"
 
 threads_manager* init_th_manager(int size, int no_players){
-  printf("\n inside init_th_manager()\n");
+  //printf("\n inside init_th_manager()\n");
   threads_manager* tm = (threads_manager*)malloc(sizeof(threads_manager));
   tm->size = size;
   tm->index = 0; //before first element is inserted in the table
@@ -17,7 +17,7 @@ threads_manager* init_th_manager(int size, int no_players){
 }
 
 void increase_size(threads_manager* tm){
-  printf("\n inside increase_size()\n");
+  //printf("\n inside increase_size()\n");
   int old_size = tm->size;
   int new_size = old_size * 2;
   blackjack_table** tables =(blackjack_table**)malloc(new_size*sizeof(blackjack_table*));
@@ -34,7 +34,7 @@ void increase_size(threads_manager* tm){
 }
 
 void add_blackjack_table(threads_manager* tm){
-  printf("\ninside add_blackjack_table()\n");
+  //printf("\ninside add_blackjack_table()\n");
   if(tm->index >= tm->size - 1){
     increase_size(tm);
   }
@@ -60,7 +60,7 @@ int remove_blackjack_table(threads_manager* tm,int table_no){
 }
 
 int add_player(threads_manager* tm, player* p){
-  printf("\ninside add_player()\n");
+  //printf("\ninside add_player()\n");
   if(tm->index == 0){//there is no allocated table
     printf("first table initialization\n");
     add_blackjack_table(tm);
@@ -92,7 +92,7 @@ int check_clients_connectivity(threads_manager* tm, int table_no, int timeout){
 
 
 void print_blackjack_tables(threads_manager* tm){
-  printf("\ninside print_blackjack_table\n");
+  //printf("\ninside print_blackjack_table\n");
   printf("number of blackjack tables = %d\n",tm->index); 
   for(int i = 0; i < tm->index ; i++){
     printf("Blackjack Table %d :\n{ ",i);

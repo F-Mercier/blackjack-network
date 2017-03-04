@@ -90,7 +90,35 @@ int main(int argc, char** argv){
   printf("finish sending\n");
 
   while(1){
+    memset(rbuf,0,MAXDATASIZE);
+    if((numbytes = recv(sockfd,rbuf,MAXDATASIZE-1,0)) == -1){
+      fprintf(stderr,"recv : error while reading from the server : %s\n",strerror(errno));
+      exit(1);
+    }
+    rbuf[numbytes] = '\0';
+    printf("%s : received '%s'\n",argv[0],rbuf);
+ 
+    if(strcmp(rbuf,"req: pseudo") == 0){ //retry sending pseudo if already existant in the database
+      printf("The pseudo %s is already taken. Please enter a new one : ",pseudo);
+      fgets(pseudo,20,stdin);
+      if ((strlen(pseudo)>0) && (pseudo[strlen (pseudo) - 1] == '\n'))
+        pseudo[strlen (pseudo) - 1] = '\0';
+      printf("you entered : %s\n",pseudo);
+      if(send(sockfd,pseudo,strlen(pseudo),0) == -1){
+	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	exit(1);
+      }
+      printf("finish sending\n");
+    }
 
+    if(strcmp(rbuf,"req: connected") == 0){ //tell server that the client is still alive
+      printf("sending signal to server that we are connected\n");
+      if(send(sockfd,"yes",3,0) == -1){
+	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	exit(1);
+      }
+      printf("finish sending\n");
+    }
   }
 
   return 0;

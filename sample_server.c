@@ -16,6 +16,8 @@
 #define BACKLOG 20
 #define MAXDATASIZE 100
 
+pthread_mutex_t mutex;
+
 
 struct data_s{
   int* socket_fd;
@@ -35,13 +37,22 @@ void* run_thread(void* args){
  
   
   player* p = init_player(socket_fd,pb);
+  pthread_mutex_lock(&mutex);
   int table_no = add_player(tm,p);
-  printf("you are given the table no %d\n",table_no);
+  pthread_mutex_unlock(&mutex);
   print_blackjack_tables(tm);
-  print_pseudos(pb);
+  //print_pseudos(pb);
+
+  //test if check connection works
+  pthread_mutex_lock(&mutex);
+  check_clients_connectivity(tm,table_no,2);
+  pthread_mutex_unlock(&mutex);
 
   while(1){
-    
+    pthread_mutex_lock(&mutex);
+    check_clients_connectivity(tm,table_no,2);
+    pthread_mutex_unlock(&mutex);
+    print_blackjack_tables(tm);
   }
   
   pthread_exit(NULL);
@@ -56,6 +67,11 @@ int main(int argc, char** argv){
   int yes = 1;
   char ip[INET6_ADDRSTRLEN];
   int status;
+
+  pthread_t thread;
+  pthread_attr_t att;
+  pthread_attr_init(&att);
+  pthread_mutex_init(&mutex, NULL);
 
   if(argc != 2){
     fprintf(stderr, "%s: usage: sample_server max_player_on_table\n", argv[0]);
@@ -120,9 +136,7 @@ int main(int argc, char** argv){
       continue;
     }
 
-    pthread_t thread;
-    pthread_attr_t att;
-    pthread_attr_init(&att);
+    
 
     printf("accepted\n");
     thread_data.socket_fd = &new_sockfd;
@@ -138,7 +152,7 @@ int main(int argc, char** argv){
     t++;
 
   }
-
+  pthread_mutex_destroy(&mutex);
   pthread_exit(NULL);
   return 0;
 }

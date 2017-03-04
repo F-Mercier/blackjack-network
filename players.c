@@ -8,9 +8,10 @@
 #include <string.h>
 #include <errno.h>
 
-
+#define MAXDATASIZE 100
 
 player* init_player(int socket_fd, pseudo_db* pb){
+  printf("inside init_player()\n");
   player* p = (player*)malloc(sizeof(player));
   p->socket_fd = socket_fd; //set the socket descriptor
   p->connected = 1; //set connected to true
@@ -23,7 +24,7 @@ player* init_player(int socket_fd, pseudo_db* pb){
   }
   bind_pseudo(&pb,pseudo);
   p->pseudo = pseudo;
-  return player;
+  return p;
 }
 
 
@@ -35,7 +36,7 @@ char* ask_for_pseudo(int socket_fd){
     exit(1);
   }
 
-  char readbuf[MAXDATASIZE];
+  char* readbuf = (char*) malloc(sizeof(char) * MAXDATASIZE);
 
   int numbytes;
 
@@ -53,8 +54,8 @@ char* ask_for_pseudo(int socket_fd){
 }
 
 
-player_table* init_player_table(int size){
-  player_table* pt = (player_table*)malloc(sizeof(player_table));
+players_table* init_players_table(int size){
+  players_table* pt = (players_table*)malloc(sizeof(players_table));
   pt->size = size;
   pt->curr_no_players = 0; // it is like index = -1 in the array because no elements
   pt->p = (player**)malloc(size * sizeof(player*));
@@ -102,12 +103,12 @@ int check_connectivity(player* p, int timeout){
   }
   
   fd_set readfds;
-  struct timeval timeout;
-  timeout.tv_sec = timeout;
-  timeout.tv_usec = 0;
+  struct timeval t;
+  t.tv_sec = timeout;
+  t.tv_usec = 0;
   FD_ZERO(&readfds);
   FD_SET(p->socket_fd,&readfds);
-  int rv = select(p->socket_fd + 1,&readfds,NULL,NULL,&timeout);
+  int rv = select(p->socket_fd + 1,&readfds,NULL,NULL,&t);
   if(rv == -1){
     fprintf(stderr,"select: error in select: %s\n",strerror(errno));
     return -1;

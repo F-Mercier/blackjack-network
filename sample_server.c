@@ -17,29 +17,52 @@
 #define MAXDATASIZE 100
 
 
+struct data_s{
+  int* socket_fd;
+  threads_manager* tm;
+  pseudo_db* pb;
+};
+typedef struct data_s data;
+
+
 // This function is executed in every thread and should contain the logic of the player
-void* run_thread(void* sockfd){
-  int sfd = *((int*)sockfd);
+void* run_thread(void* args){
+  /* int sfd = *((int*)sockfd); */
 
-  char* init_msg = "req: pseudo";
-  if(send(sfd,init_msg,strlen(init_msg),0) == -1){
-    fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
-    exit(1);
+  /* char* init_msg = "req: pseudo"; */
+  /* if(send(sfd,init_msg,strlen(init_msg),0) == -1){ */
+  /*   fprintf(stderr,"send: error while sending : %s\n", strerror(errno)); */
+  /*   exit(1); */
+  /* } */
+
+  /* char readbuf[MAXDATASIZE]; */
+
+  /* int numbytes; */
+
+  /* if((numbytes = recv(sfd,readbuf,MAXDATASIZE-1,0)) == -1){ */
+  /*   fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno)); */
+  /*   exit(1); */
+  /* } */
+
+  /* printf("numbytes =  %d\n", numbytes); */
+  /* readbuf[numbytes] = '\0'; */
+
+  /* printf("connected client has pseudo : %s \n",readbuf); */
+
+  data* d = (data*)args;
+  int socket_fd = *(d->socket_fd);
+  threads_manager* tm =  d->tm;
+  pseudo_db* pb = d->pb;
+ 
+  
+  player* p = init_player(socket_fd,pb);
+  add_player(tm,p);
+  print_players_table_array(tm);
+  print_pseudos(pb);
+
+  while(1){
+
   }
-
-  char readbuf[MAXDATASIZE];
-
-  int numbytes;
-
-  if((numbytes = recv(sfd,readbuf,MAXDATASIZE-1,0)) == -1){
-    fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno));
-    exit(1);
-  }
-
-  printf("numbytes =  %d\n", numbytes);
-  readbuf[numbytes] = '\0';
-
-  printf("connected client has pseudo : %s \n",readbuf);
   
   pthread_exit(NULL);
 }
@@ -48,7 +71,7 @@ void* run_thread(void* sockfd){
 int main(int argc, char** argv){
   int sockfd, new_sockfd;
   struct addrinfo hints, *serverinfo, *p;
-  struct sockaddr_storage* client_addrs;
+  struct sockaddr_storage client_addrs;
   socklen_t sin_size;
   int yes = 1;
   char ip[INET6_ADDRSTRLEN];
@@ -59,7 +82,11 @@ int main(int argc, char** argv){
     return 1;
   }
 
+  threads_manager* tm = init_th_manager(100,5);
+  pseudo_db* pb = init_pseudo_db(100);
 
+  data thread_data;
+  
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
@@ -107,7 +134,7 @@ int main(int argc, char** argv){
  
   while(1){
     sin_size = sizeof(client_addrs);
-    new_sockfd = accept(sockfd,(struct sockaddr*) client_addrs, &sin_size);
+    new_sockfd = accept(sockfd,(struct sockaddr*)&client_addrs, &sin_size);
     if(new_sockfd < 0){
       fprintf(stderr, "accept: error while accepting: %s\n",strerror(errno));
       continue;
@@ -118,8 +145,11 @@ int main(int argc, char** argv){
     pthread_attr_init(&att);
 
     printf("accepted\n");
-
-    rc = pthread_create(&thread,&att, run_thread , &new_sockfd);
+    thread_data.socket_fd = &new_sockfd;
+    thread_data.tm = tm;
+    thread_data.pb = pb;
+    
+    rc = pthread_create(&thread,&att, run_thread , &thread_data);
     if (rc){
       printf("ERROR; return code from pthread_create() is %d\n", rc);
       exit(-1);

@@ -1,7 +1,7 @@
 #include "pseudos.h"
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 
 pseudo_db* init_pseudo_db(int size){
   pseudo_db* pb = (pseudo_db*) malloc(sizeof(pseudo_db));

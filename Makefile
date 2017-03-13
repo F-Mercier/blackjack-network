@@ -17,6 +17,10 @@ pseudos.c: pseudos.h
 
 players.c: players.h pseudos.h
 
+card.c: card.h
+
+client_game.c: client_game.h card.h
+
 PHONY:clean
 
 clean:

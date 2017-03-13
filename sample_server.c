@@ -14,11 +14,13 @@
 
 #include "threads_manager.h"
 
-#define PORT "5000"
+#define PORT "5001"
 #define BACKLOG 20
 #define MAXDATASIZE 100
 
 pthread_mutex_t mutex;
+threads_manager tm;
+pseudo_db pb;
 
 // structure used to pass as argument in thread function
 struct data_s{
@@ -29,35 +31,83 @@ struct data_s{
 typedef struct data_s data;
 
 
+void* run_game(void* arg){
+  blackjack_table* table = (blackjack_table*)arg;
+  initialize_game(table);
+  while(1){
+    //printf("inside main game loop\n");
+  }
+}
+
+
+void* manage_games(void* arg){
+  pthread_t game_thread;
+  pthread_attr_t att;
+  pthread_attr_init(&att);
+  int i=0;
+  int rc;
+  while(1){
+    if(tm.tables[i] != NULL){
+      i++;
+      //create new thread with the instance of the game
+      rc = pthread_create(&game_thread,&att, run_game ,&(tm.tables[i]));
+      if (rc){
+	printf("ERROR; return code from pthread_create() is %d\n", rc);
+	exit(-1);
+      }
+      printf("game instance created\n");
+    }
+  }
+}
+
+
 // This function is executed in every thread and should contain the logic of the player
 void* run_thread(void* args){
 
   //extract useful data from the args argument 
-  data* d = (data*)args;
-  int socket_fd = *(d->socket_fd);
-  threads_manager* tm =  d->tm;
-  pseudo_db* pb = d->pb;
-
+  /* data* d = (data*)args; */
+  /* int socket_fd = *(d->socket_fd); */
+  /* threads_manager* tm =  d->tm; */
+  /* pseudo_db* pb = d->pb; */
+  
+  int socket_fd = *(int*)args;
   
   //create a new player containig the socket descriptor and his pseudo
-  player* p = init_player(socket_fd,pb);
+  player* p = init_player(socket_fd,&pb);
   pthread_mutex_lock(&mutex);
   //add player to a blackjack table
-  int table_no = add_player(tm,p);
+  int table_no = add_player(&tm,p);
   pthread_mutex_unlock(&mutex);
-  print_pseudos(pb);
+  print_pseudos(&pb);
   
-  print_blackjack_tables(tm);
+  //print_blackjack_tables(tm);
+  int is_running = 0;
   
   while(1){
+    //check if full is 1 to tell client game started
+    printf("inside while loop\n");
+    if(tm.tables[table_no]->full == 1 && is_running == 0 ){
+      printf("sending player infos\n");
+      send_players_info(tm.tables[table_no],socket_fd);
+      
+      printf("sending start game signal\n");
+      send_start_game(socket_fd);// to implement
+      is_running = 1;
+    }
+
+    if(tm.tables[table_no]->full == 0 && is_running == 0){
+      printf("sending player infos\n");
+      send_players_info(tm.tables[table_no],socket_fd);
+    }
+
+    
     pthread_mutex_lock(&mutex);
     if(check_connectivity(p,15) == 0){
-      remove_player(tm,table_no,p,pb);
+      remove_player(&tm,table_no,p,&pb);
     }
     pthread_mutex_unlock(&mutex);
-    
-    print_blackjack_tables(tm);
-    sleep(1);//wait 1 second between rechecks
+    print_blackjack_tables(&tm);
+    sleep(1);//wait 1 second between frames
   }
   
   pthread_exit(NULL);
@@ -73,7 +123,7 @@ int main(int argc, char** argv){
   char ip[INET6_ADDRSTRLEN];
   int status;
 
-  pthread_t thread;
+  pthread_t thread, thread1;
   pthread_attr_t att;
   pthread_attr_init(&att);
   pthread_mutex_init(&mutex, NULL);
@@ -83,10 +133,12 @@ int main(int argc, char** argv){
     return 1;
   }
 
-  threads_manager* tm = init_th_manager(100,atoi(argv[1]));
-  pseudo_db* pb = init_pseudo_db(100);
+  threads_manager* th_man = init_th_manager(100,atoi(argv[1]));
+  pseudo_db* pseudos = init_pseudo_db(100);
+  tm = *th_man;
+  pb = *pseudos;
 
-  data thread_data;
+  //data thread_data;
   
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
@@ -132,6 +184,17 @@ int main(int argc, char** argv){
   printf("listening\n");
   int t = 0;
   int rc;
+
+  //before we accept we create a new thread to instantiate games
+  //every time a new blackjack table is created this thread creates
+  //a new thread that speaks through blackjack_table structure to
+  //the client
+  rc = pthread_create(&thread1,&att, manage_games ,NULL);
+  if (rc){
+    printf("ERROR; return code from pthread_create() is %d\n", rc);
+    exit(-1);
+  }
+  
  
   while(1){
     sin_size = sizeof(client_addrs);
@@ -146,11 +209,11 @@ int main(int argc, char** argv){
     printf("accepted\n");
 
     //initialize the data we pass into the function executed in each thread
-    thread_data.socket_fd = &new_sockfd;
-    thread_data.tm = tm;
-    thread_data.pb = pb;
+    /* thread_data.socket_fd = &new_sockfd; */
+    /* thread_data.tm = tm; */
+    /* thread_data.pb = pb; */
 
-    rc = pthread_create(&thread,&att, run_thread , &thread_data);
+    rc = pthread_create(&thread,&att, run_thread , &new_sockfd);
     if (rc){
       printf("ERROR; return code from pthread_create() is %d\n", rc);
       exit(-1);

@@ -71,4 +71,7 @@ int check_connectivity(player* p, int timeout);
  */
 void print_blackjack_tables(threads_manager* tm);
 
+
+void initialize_game(blackjack_table* table);
+
 #endif // threads_manager

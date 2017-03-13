@@ -4,6 +4,14 @@
 #include "pseudos.h"
 #include "card.h"
 
+typedef enum{
+  CARD_1,
+  CARD_2,
+  ACTION,
+  BET,
+  MONEY,
+  NO_INFO,
+}info_t;
 
 /*
  *structure defining a player
@@ -30,6 +38,8 @@ typedef struct blackjack_table{
   int size; // size of the table (necessary for the loops)
   player** players; // array of players
   int full; //boolean: 1 - table is full ; 0 - table is not yet full
+  int count_views;// how many threads have got the information; it is reset by the game thread once count_views==size
+  info_t* info_changed;
 }blackjack_table;
 
 /*
@@ -72,5 +82,15 @@ char* ask_for_pseudo(int socket_fd, char* pseudo);
  *tells the client that the server succeded to bind a pseudo
  */
 void send_pseudo_confirmation(int socket_fd);
+
+/*
+ *sends the client the initial values for each player at the table
+ */
+void send_players_info(blackjack_table* table,int socket_fd);
+
+/*
+ *tells the client that the game is ready to begin
+ */
+void send_start_game(int socket_fd);
 
 #endif //players_h

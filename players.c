@@ -31,6 +31,7 @@ player* init_player(int socket_fd, pseudo_db* pb){
     printf("check_existance for %s returned 1\n",pseudo);
     while(check_existance(pb,pseudo) != 0){
       printf("checking existance for %s in loop\n",pseudo);
+      memset(pseudo,0,20);
       ask_for_pseudo(socket_fd,pseudo);
     }
     bind_pseudo(&pb,pseudo);
@@ -97,6 +98,41 @@ void send_pseudo_confirmation(int socket_fd){
 }
 
 
+void send_players_info(blackjack_table* table, int socket_fd){
+  printf("inside send_player_info() \n");
+
+  if(table->number_of_players == 0){
+    printf("no player at the table\n");
+    return;
+  }
+  
+  int n = table->size * 20;
+  char message[n];
+  //message ex:
+  //1:pseudo1;;2:pseudo2;;
+  memset(message,0,n);
+  char str[23];
+  memset(str,0,23);
+  
+  sprintf(str,"%d:%s;;",0,table->players[0]->pseudo);
+  //printf("aaa\n");
+  strncpy(message,str,23);
+  //printf("temp = %s\n",message);
+  for(int i=1; i< table->number_of_players; i++){
+    memset(str,0,23);
+    sprintf(str,"%d:%s;;",i,table->players[i]->pseudo);
+    //printf("ccc\n");
+    strncat(message,str,23);
+    //printf("ddd\n");
+  }
+  printf("message = %s\n",message);
+}
+
+void send_start_game(int socket_fd){
+  printf("inside send_start_game()\n");
+  
+}
+
 blackjack_table* init_blackjack_table(int size){
   //printf("\ninside init_blackjack_table()\n");
   blackjack_table* pt = (blackjack_table*)malloc(sizeof(blackjack_table));
@@ -107,6 +143,8 @@ blackjack_table* init_blackjack_table(int size){
     pt->players[i] = NULL;
   }
   pt->full = 0;
+  pt->count_views = 0;
+  pt->info_changed = NO_INFO;
   return pt;
 }
 

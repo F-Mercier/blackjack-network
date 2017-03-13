@@ -197,3 +197,14 @@ void print_blackjack_tables(threads_manager* tm){
     printf("}\n\n");
   }
 }
+
+
+void initialize_game(blackjack_table* table){
+  printf("inside initialize game()\n");
+  /* while(table->full != 1){ */
+  /*   printf("table still not full\n"); */
+  /* } */
+  /* //send a start game message to all players */
+  /* send_start_game(table); */
+
+}

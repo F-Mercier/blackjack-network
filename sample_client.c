@@ -11,7 +11,7 @@
 
 #include "client_game.h"
 
-#define PORT "5000"
+#define PORT "5001"
 #define MAXDATASIZE 100
 
 void* get_in_addr(struct sockaddr* sa){

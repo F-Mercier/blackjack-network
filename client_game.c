@@ -135,6 +135,13 @@ void send_other_pseudo(int socket_fd, char* pseudo){
   if ((strlen(pseudo)>0) && (pseudo[strlen (pseudo) - 1] == '\n'))
     pseudo[strlen (pseudo) - 1] = '\0';
   printf("you entered : %s\n",pseudo);
+  while(strcmp(pseudo,"") == 0){
+    printf("empty pseudo not accepted. Please enter again:");
+    fgets(pseudo,19,stdin);
+    if ((strlen(pseudo)>0) && (pseudo[strlen (pseudo) - 1] == '\n'))
+      pseudo[strlen (pseudo) - 1] = '\0';
+    printf("you entered : %s\n",pseudo);
+  }
   int plen = strlen(pseudo);
   int n = plen+3;
   char msg[n];
@@ -158,33 +165,4 @@ void send_keep_connection(int socket_fd){
   }
 }
 
-/* int fetch_number_of_players(int socket_fd){ */
-/*   char* msg = "req: max_players"; */
-/*   if(send(socket_fd,msg,sizeof(msg),0) == -1){ */
-/*     fprintf(stderr,"send: error while sending : %s\n", strerror(errno)); */
-/*     exit(1); */
-/*   } */
-
-/*   char rbuf[MAXDATASIZE]; */
-/*   memset(rbuf,0,MAXDATASIZE); */
-/*   int numbytes; */
-/*   if((numbytes = recv(socket_fd,rbuf,MAXDATASIZE-1,0)) == -1){ */
-/*     fprintf(stderr,"recv : error while reading from the server : %s\n",strerror(errno)); */
-/*     exit(1); */
-/*   } */
-/*   rbuf[numbytes] = '\0'; */
-/*   //the message should be "max_players=16;" for example */
-/*   int i = 12; */
-/*   char digits[2]; */
-/*   int k=0; */
-/*   while(rbuf[i] != ';'){ */
-/*     digits[k] = rbuf[i]; */
-/*     k++; */
-/*     i++; */
-/*   } */
-/*   digits[k]='\0'; */
-/*   int number = atoi(digits); */
-/*   printf("fetch max players: %d\n",number); */
-/*   return number; */
-/* } */
 

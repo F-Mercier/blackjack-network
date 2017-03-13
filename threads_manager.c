@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "threads_manager.h"
 
@@ -59,8 +61,59 @@ int remove_blackjack_table(threads_manager* tm,int table_no){
   return 1;
 }
 
+/* //sends infos to all players at the table */
+/* void send_table_info(blackjack_table* bt){ */
+/*   printf("inside send_table_info\n"); */
+/*   char res[400]; */
+/*   memset(res,0,400); */
+/*   strcpy(res,"game_info--"); */
+/*   char* strings[bt->number_of_players]; */
+/*   for(int i = 0; i < bt->number_of_players; i++){ */
+
+/*     char* card1 = card_to_string(bt->players[i]->card1); */
+/*     printf("card1 = %s\n",card1); */
+
+/*     char* card2 = card_to_string(bt->players[i]->card2); */
+/*     printf("card2 = %s\n",card2); */
+
+/*     char paction[10]; */
+/*     memset(paction,0,10); */
+/*     switch(bt->players[i]->act){ */
+/*     case NO_ACTION: strncpy(paction,"no_action",9);break; */
+/*     case HIT: strncpy(paction,"hit",3);break; */
+/*     case STAND: strncpy(paction,"stand",5);break; */
+/*     default:break; */
+/*     } */
+/*     printf("action = %s\n",paction); */
+/*     char str[50]; */
+/*     memset(str,0,50); */
+/*     sprintf(str,"%d:%s;%s;%s;%s;%d;%d;%d;;",i,bt->players[i]->pseudo,card1,card2,paction,bt->players[i]->money,bt->players[i]->bet,bt->players[i]->card_sum); */
+/*     strcat(res,str); */
+/*     printf("inside send_table_info() : %s\n",str); */
+/*   } */
+  
+/*   printf("resulting string = \n%s\n",res); */
+
+/*   for(int i=0; i<bt->number_of_players; i++){ */
+/*     if(send(bt->players[i]->socket_fd,res,sizeof(res),0) < 0){ */
+/*       fprintf(stderr,"send error:%s\n",strerror(errno)); */
+/*       exit(1); */
+/*     } */
+
+/*     char rbuf[10]; */
+/*     memset(rbuf,0,10); */
+/*     int numbytes = recv(bt->players[i]->socket_fd,rbuf,sizeof(rbuf),0); */
+/*     if(numbytes < 0){ */
+/*       fprintf(stderr,"recv error:%s\n",strerror(errno)); */
+/*       exit(1); */
+/*     } */
+/*     rbuf[numbytes] = '\0'; */
+/*     printf("server received '%s'\n",rbuf); */
+/*   } */
+/* } */
+
 int add_player(threads_manager* tm, player* p){
-  //printf("\ninside add_player()\n");
+  printf("inside add_player()\n");
   if(tm->index == 0){//there is no allocated table
     printf("first table initialization\n");
     add_blackjack_table(tm);
@@ -68,8 +121,12 @@ int add_player(threads_manager* tm, player* p){
   if(add_player_to_table(tm->tables[tm->index - 1],p) == -1){
     add_blackjack_table(tm);
     add_player_to_table(tm->tables[tm->index - 1],p);
+    //send_table_info(tm->tables[tm->index-1]);
     return tm->index - 1;
   }
+  //sends message to everyone already connected
+  //send_table_info(tm->tables[tm->index - 1]);
+  
   return tm->index - 1;
 }
   
@@ -79,21 +136,49 @@ int remove_player(threads_manager* tm,int table_no, player* p, pseudo_db* pb){
 }
 
 
- int check_client_connectivity(threads_manager* tm, int table_no, player* p, pseudo_db* pb, int timeout){
-  for(int i = 0; i<tm->tables[table_no]->number_of_players; i++){
-    if(p == tm->tables[table_no]->players[i]){
-      if(check_connectivity(tm->tables[table_no]->players[i],timeout) == 0){
-        printf("before removing player\n");
-        remove_player(tm,table_no,tm->tables[table_no]->players[i],pb);
-	break;
-      }else if(check_connectivity(tm->tables[table_no]->players[i],timeout) == -1){
-        return -1;
-      }
-    }
-  }
-  return 1;
-}
+int check_connectivity(player* p, int timeout){
 
+  printf("\ninside check_connectivity()\n");
+  char* isconnected_msg = "14:req_connected";
+  
+  int sent = send(p->socket_fd,isconnected_msg,strlen(isconnected_msg),0);
+  if( sent == -1){
+    fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+    return -1;
+  }
+
+  printf("sent check connection message to client\n");
+  printf("number of bytes sent : %d/%d\n",sent,strlen(isconnected_msg));
+  
+  fd_set readfds;
+  struct timeval t;
+  t.tv_sec = timeout;
+  t.tv_usec = 0;
+  FD_ZERO(&readfds);
+  FD_SET(p->socket_fd,&readfds);
+  int rv = select(p->socket_fd + 1,&readfds,NULL,NULL,&t);
+  if(rv == -1){
+    fprintf(stderr,"select: error in select: %s\n",strerror(errno));
+    return -1;
+  }else if(rv == 0){
+    printf("time out\n");
+    return 0;
+  }else{
+    char recvbuf[5];
+    int sz =  recv(p->socket_fd,recvbuf,5,0);
+    if(sz == -1){
+      fprintf(stderr,"recv: error in recv: %s\n",strerror(errno));
+      return -1;
+    }else if(sz == 0){
+      printf("disconnected\n");
+      return 0;
+    }else{
+      printf("received %d bytes\n",sz);
+      return 1;
+    }
+    
+  }
+}
 
 void print_blackjack_tables(threads_manager* tm){
   //printf("\ninside print_blackjack_table\n");

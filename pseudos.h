@@ -5,7 +5,7 @@
  *list structure that contains a pseudo and the pointer to the next element 
  */
 struct node{
-  char* pseudo;
+  char pseudo[20];
   struct node* next;
 };
 typedef struct node* list;

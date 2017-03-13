@@ -60,3 +60,12 @@ void print_card_package(card_package_t* cp){
   }
   printf("\n");
 }
+
+char* card_to_string(card_t* card){
+  if(card == NULL) return "empty";
+  char res[20];
+  memset(res,0,20);
+  sprintf(res,"%s %s %d %d",card->symbol, card->color, card->value, card->hidden);
+  return res;
+}
+

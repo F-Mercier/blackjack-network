@@ -13,7 +13,7 @@ typedef struct card_package_s{
   int counter;//how many cards are still in the package
 }card_package_t;
 
-typedef enum{HIT, STAND} action;
+typedef enum{HIT, STAND, NO_ACTION} action;
 
 card_t init_card(char* symbol, char color, int value, int hidden);
 
@@ -28,5 +28,7 @@ void shuffle_cards(card_package_t* cp);
 card_t* get_card(card_package_t* cp);
 
 void print_card_package(card_package_t* cp);
+
+char* card_to_string(card_t* card);
 
 #endif//CARD_H

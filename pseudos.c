@@ -15,12 +15,14 @@ pseudo_db* init_pseudo_db(int size){
 }
 
 void bind_pseudo(pseudo_db** pb, char* pseudo){
+  printf("binding pseudo %s\n",pseudo);
   if((*pb)->elements == (*pb)->size){
     resize_htable(pb);
   }
   unsigned long h = hash(pseudo) % (*pb)->size;
   list l = (list)malloc(sizeof(struct node));
-  l->pseudo = pseudo;
+  memset(l->pseudo,0,20);
+  strncpy(l->pseudo,pseudo,strlen(pseudo));
   l->next = ((*pb)->htable[h]).pseudos_list;
   ((*pb)->htable[h]).pseudos_list = l;
   (*pb)->elements++;
@@ -77,6 +79,7 @@ void resize_htable(pseudo_db** pb){
 }
 
 int check_existance(pseudo_db* pb, char* pseudo){
+  printf("checking existance for %s\n",pseudo);
   unsigned long h = hash(pseudo) % pb->size;
   list tmp = (pb->htable[h]).pseudos_list;
   int found = 0;

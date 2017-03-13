@@ -2,6 +2,7 @@
 #define players_h
 
 #include "pseudos.h"
+#include "card.h"
 
 
 /*
@@ -10,8 +11,14 @@
  */
 typedef struct player{
   int socket_fd; //socket descriptor associated with this client
-  char* pseudo; // unique identifiant for the player along socket descriptor
+  char pseudo[20]; // unique identifiant for the player along socket descriptor
   int connected; // boolean: 1 - player is connected ; 0 - not connected
+  card_t* card1;
+  card_t* card2;
+  int money;
+  int bet;
+  action act;
+  int card_sum;
 }player;
 
 /*
@@ -55,17 +62,15 @@ int add_player_to_table(blackjack_table* pt, player* p);
 int remove_player_from_table(blackjack_table* pt, player* p, pseudo_db* pb);
 
 /*
- *check if a client is connected
- *return 1 if this player is connected, returns 0 if disconected and -1 if check_connectivity fails
- */
-int check_connectivity(player* p, int timeout);
-
-
-/*
  *method to retrieve from the client another pseudo
  *uses socket_fd of the client to pass the messages
  *only used in the init_player method
  */
-char* ask_for_pseudo(int socket_fd); 
+char* ask_for_pseudo(int socket_fd, char* pseudo); 
+
+/*
+ *tells the client that the server succeded to bind a pseudo
+ */
+void send_pseudo_confirmation(int socket_fd);
 
 #endif //players_h

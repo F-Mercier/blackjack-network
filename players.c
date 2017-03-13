@@ -18,46 +18,82 @@ player* init_player(int socket_fd, pseudo_db* pb){
   p->connected = 1; //set connected to true
   // check if pseudo already exists before we bind it to the player
   //steps : check_existance - bind_pseudo - set pseudo to player
-  char* pseudo;
-  pseudo = ask_for_pseudo(socket_fd);
+  char pseudo[20];
+  memset(pseudo,0,20);
+  printf("before first ask for pseudo\n");
+  ask_for_pseudo(socket_fd,pseudo);
+  printf("pseudo is %s\n",pseudo);
   if(check_existance(pb,pseudo) == 0){
+    printf("checking existance for %s\n",pseudo);
     bind_pseudo(&pb,pseudo);
+    send_pseudo_confirmation(socket_fd);
   }else{
+    printf("check_existance for %s returned 1\n",pseudo);
     while(check_existance(pb,pseudo) != 0){
-      printf("inside while()\n");
-      pseudo = ask_for_pseudo(socket_fd);
+      printf("checking existance for %s in loop\n",pseudo);
+      ask_for_pseudo(socket_fd,pseudo);
     }
     bind_pseudo(&pb,pseudo);
+    send_pseudo_confirmation(socket_fd);
   }
-  p->pseudo = pseudo;
+  printf("now pseudo is %s\n",pseudo);
+  strncpy(p->pseudo,pseudo,20);
+  p->card1 = NULL;
+  p->card2 = NULL;
+  p->money = 500;
+  p->bet = 0;
+  p->act = NO_ACTION;
+  p->card_sum = 0;
+  
   return p;
 }
 
 
-char* ask_for_pseudo(int socket_fd){
+char* ask_for_pseudo(int socket_fd, char* pseudo){
   //printf("\ninside ask_pseudo()\n ");
-  char* init_msg = "req: pseudo";
+
+   char* init_msg = "10:req_pseudo";
+
+   if(send(socket_fd,init_msg,strlen(init_msg),0) < 0){
+     fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+     exit(1); 
+   }
   
+   char readbuf[MAXDATASIZE];
+   memset(readbuf,0,MAXDATASIZE); 
+   int numbytes;
+   int bytes;
+   int num_buf[4];
+   memset(num_buf,0,4);
+   if((bytes = recv(socket_fd,num_buf,3,0)) == -1){
+     fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno));
+     exit(1);
+   }
+   num_buf[bytes-1] = '\0';
+   int sz = atoi(num_buf);
+   printf("we read %d for pseudo\n",sz);
+   
+   printf("receving pseudo from client\n");
+   if((numbytes = recv(socket_fd,readbuf,sz,0)) < 0){
+     fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno));
+     exit(1);
+    
+   }
+   printf("numbytes =  %d\n", numbytes);
+   readbuf[numbytes] = '\0';
+   
+   printf("connected client has pseudo : %s \n",readbuf);
+   strncpy(pseudo,readbuf,sz);
+   return readbuf;
+   
+}
+
+void send_pseudo_confirmation(int socket_fd){
+  char* init_msg = "14:pseudo_enabled";
   if(send(socket_fd,init_msg,strlen(init_msg),0) == -1){
     fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
-    exit(1);
+    return;
   }
-
-  char* readbuf = (char*) malloc(sizeof(char) * MAXDATASIZE);
-
-  int numbytes;
-
-  if((numbytes = recv(socket_fd,readbuf,MAXDATASIZE-1,0)) == -1){
-    fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno));
-    exit(1);
-  }
-
-  printf("numbytes =  %d\n", numbytes);
-  readbuf[numbytes] = '\0';
-
-  printf("connected client has pseudo : %s \n",readbuf);
-  return readbuf;
-  
 }
 
 
@@ -125,40 +161,3 @@ int remove_player_from_table(blackjack_table* pt, player* p, pseudo_db* pb){
 }
 
 
-int check_connectivity(player* p, int timeout){
-  //printf("\ninside check_connectivity()\n");
-  char* isconnected_msg = "req: connected";
-
-  if(send(p->socket_fd,isconnected_msg,strlen(isconnected_msg),0) == -1){
-    fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
-    return -1;
-  }
-  
-  fd_set readfds;
-  struct timeval t;
-  t.tv_sec = timeout;
-  t.tv_usec = 0;
-  FD_ZERO(&readfds);
-  FD_SET(p->socket_fd,&readfds);
-  int rv = select(p->socket_fd + 1,&readfds,NULL,NULL,&t);
-  if(rv == -1){
-    fprintf(stderr,"select: error in select: %s\n",strerror(errno));
-    return -1;
-  }else if(rv == 0){
-    printf("time out\n");
-    return 0;
-  }else{
-    char recvbuf[5];
-    int sz =  recv(p->socket_fd,recvbuf,5,0);
-    if(sz == -1){
-      fprintf(stderr,"recv: error in recv: %s\n",strerror(errno));
-      return -1;
-    }else if(sz == 0){
-      printf("disconnected\n");
-      return 0;
-    }else{
-      return 1;
-    }
-  }
-}
-    

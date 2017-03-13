@@ -59,13 +59,11 @@ int add_player(threads_manager* tm, player* p);
  */
 int remove_player(threads_manager* tm, int table_no, player* p, pseudo_db* pb);
 
-/**
- *scan all clients on selected players_table for connectivity
- *if one is disconnected it is removed from the table
- * returns -1 if there is an error
- * returns 1 if there is no client disconnected or there is a disconnected client and it was removed succesfully
+/*
+ *check if a client is connected
+ *return 1 if this player is connected, returns 0 if disconected and -1 if check_connectivity fails
  */
-int check_client_connectivity(threads_manager* tm, int table_no, player* p, pseudo_db* pb, int timeout);
+int check_connectivity(player* p, int timeout);
 
 
 /**

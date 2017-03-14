@@ -157,6 +157,9 @@ message get_message(int socket_fd,char* message, int size){
   }else if(strncmp(rbuf,"players_info=",13)==0){
     //printf("game info message:\n");
     return players_info;
+  }else if(strncmp(rbuf,"player_disconnected=",20)==0){
+    printf("player disconnected\n"); 
+    return player_disconnected;
   }else return unknown;
   
 }

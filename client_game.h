@@ -10,6 +10,7 @@ typedef enum{
   pseudo_enabled,
   start_game,
   players_info,
+  player_disconnected,
   unknown
 } message;
 

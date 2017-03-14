@@ -5,6 +5,7 @@
 #include "card.h"
 
 typedef enum{
+  CONNEXION,
   CARD_1,
   CARD_2,
   ACTION,
@@ -93,5 +94,10 @@ void send_players_info(blackjack_table* table,int socket_fd);
  *tells the client that the game is ready to begin
  */
 void send_start_game(int socket_fd);
+
+/*
+ *tells the other clients from the same table that this client has disconnected
+ */
+void send_disconnected_to_all(blackjack_table* table, player* p);
 
 #endif //players_h

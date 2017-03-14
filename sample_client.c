@@ -93,11 +93,26 @@ int main(int argc, char** argv){
     system("clear");
     //at each step in the loop check connectivity
     message m = get_message(sockfd,msg,2*MAXDATASIZE);
-    
+
+    if(m == player_disconnected){
+      char ppseudo[20];
+      memset(ppseudo,0,20);
+      int k=0;
+      for(int j = 20; j<strlen(msg);j++){
+	ppseudo[k] = msg[j];
+	k++;
+      }
+      ppseudo[k] = '\0';
+      for(int i = 0; i< game->number_of_players; i++){
+	if(strncmp(game->players_pseudos[i],ppseudo,strlen(ppseudo))==0){
+	  game->players_connected[i] = 0;
+	  break;
+	}
+      }
+    }
     if(m == req_connected){
       send_keep_connection(sockfd);
     }
-    
 
     printf("before printing the game\n\n");
     print_game(game);

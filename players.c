@@ -222,4 +222,19 @@ int remove_player_from_table(blackjack_table* pt, player* p, pseudo_db* pb){
   else return -1;
 }
 
+void send_disconnected_to_all(blackjack_table* table, player* p){
+  char msg[40];
+  memset(msg,0,40);
+  int l = strlen(p->pseudo) + strlen("player_disconnected=") + 3;
+  sprintf(msg,"%d:player_disconnected=%s",l,p->pseudo);
+  for(int i = 0; i<table->number_of_players; i++){
+    if(strcmp(table->players[i]->pseudo,p->pseudo) != 0){
+      if(send(table->players[i]->socket_fd,msg,strlen(msg),0) == -1){
+	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	return;
+      }
+    }
+  }
+}
+      
 

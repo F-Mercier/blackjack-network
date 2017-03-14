@@ -98,6 +98,7 @@ void* run_thread(void* args){
     
     pthread_mutex_lock(&mutex);
     if(check_connectivity(p,15) == 0){
+      send_disconnected_to_all(tm.tables[table_no],p);//to implement
       remove_player(&tm,table_no,p,&pb);
     }
     pthread_mutex_unlock(&mutex);

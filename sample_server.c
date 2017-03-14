@@ -95,11 +95,6 @@ void* run_thread(void* args){
       is_running = 1;
     }
 
-    if(tm.tables[table_no]->full == 0 && is_running == 0){
-      printf("sending player infos\n");
-      send_players_info(tm.tables[table_no],socket_fd);
-    }
-
     
     pthread_mutex_lock(&mutex);
     if(check_connectivity(p,15) == 0){

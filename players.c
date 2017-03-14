@@ -106,30 +106,54 @@ void send_players_info(blackjack_table* table, int socket_fd){
     return;
   }
   
-  int n = table->size * 20;
+  int n = table->size * 20 + table->size * 3;
   char message[n];
   //message ex:
   //1:pseudo1;;2:pseudo2;;
   memset(message,0,n);
-  char str[23];
-  memset(str,0,23);
+  char str[40];
+  memset(str,0,40);
   
-  sprintf(str,"%d:%s;;",0,table->players[0]->pseudo);
+  sprintf(str,"players_info=%d:%s;;",0,table->players[0]->pseudo);
   //printf("aaa\n");
-  strncpy(message,str,23);
+  strncpy(message,str,40);
   //printf("temp = %s\n",message);
   for(int i=1; i< table->number_of_players; i++){
-    memset(str,0,23);
+    memset(str,0,40);
     sprintf(str,"%d:%s;;",i,table->players[i]->pseudo);
     //printf("ccc\n");
-    strncat(message,str,23);
+    strncat(message,str,40);
     //printf("ddd\n");
   }
   printf("message = %s\n",message);
+  int m = n+3;
+  char final_message[m];
+  memset(final_message,0,m);
+  char length[2];
+  memset(length,0,2);
+  if(length < 10){
+    sprintf(length,"0%d:",strlen(message));
+  } else{
+    sprintf(length,"%d:",strlen(message));
+  }
+  strncpy(final_message,length, strlen(length));
+  strncat(final_message, message, strlen(message));
+  printf("final message = %s\n",final_message);
+
+  if(send(socket_fd,final_message,strlen(final_message),0) == -1){
+    fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+    return;
+  }
+  
 }
 
 void send_start_game(int socket_fd){
   printf("inside send_start_game()\n");
+  char* start_game = "10:start_game";
+  if(send(socket_fd,start_game,strlen(start_game),0) == -1){
+    fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+    return;
+  }
   
 }
 

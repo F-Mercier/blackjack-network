@@ -27,6 +27,7 @@ typedef struct player{
   int bet;
   action act;
   int card_sum;
+  //int countdown;//init with the number of threads that will read this variable
 }player;
 
 /*

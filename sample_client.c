@@ -90,6 +90,7 @@ int main(int argc, char** argv){
   memset(msg,0,2*MAXDATASIZE);
   //main loop for the client
   while(1){
+    system("clear");
     //at each step in the loop check connectivity
     message m = get_message(sockfd,msg,2*MAXDATASIZE);
     
@@ -98,7 +99,8 @@ int main(int argc, char** argv){
     }
     
 
-
+    printf("before printing the game\n\n");
+    print_game(game);
     
   }
 

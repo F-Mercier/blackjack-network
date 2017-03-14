@@ -13,7 +13,8 @@ int global = 0;
 game_instance* init_game(int socket_fd, char* pseudo){
   game_instance* game = (game_instance*)malloc(sizeof(game_instance));
   game->socket_fd = socket_fd;
-  game->my_pseudo = pseudo;
+  memset(game->my_pseudo,0,20);
+  strncpy(game->my_pseudo,pseudo,strlen(pseudo));
 
   //setting up the client's pseudo
   char msg[MAXDATASIZE];
@@ -28,15 +29,29 @@ game_instance* init_game(int socket_fd, char* pseudo){
     }else if(m == req_other_pseudo){
       printf("retrying to send pseudo to server\n");
       send_other_pseudo(socket_fd,pseudo);
-      game->my_pseudo = pseudo;
+      memset(game->my_pseudo,0,20);
+      strncpy(game->my_pseudo,pseudo,strlen(pseudo));
     }else{
       printf("message not recognized\n");
     }
     memset(msg,0,MAXDATASIZE);
     m = get_message(socket_fd,msg,MAXDATASIZE);
   }
-  //ask the server how many players will be at the table
-  //game->number_of_players = fetch_number_of_players(int socket_fd);
+  
+  //init players_pseudo table and other variables
+  for(int i = 0; i < 10; i++){
+    memset(game->players_pseudos[i],0,20);
+    game->players_actions[i] = NO_ACTION;
+    for(int j = 0; j<20; j++){
+      game->players_cards[i][j] = NULL;
+    }
+    game->players_bets[i] = 0;
+    game->players_money[i] = 500;
+    game->cards_sum[i] = 0;
+    game->players_connected[i] = 0;//initially all players are disconnected
+    
+  }
+
   printf("pseudo resolved\n");
   while( m != start_game){
     //wait for players to join the game
@@ -44,20 +59,54 @@ game_instance* init_game(int socket_fd, char* pseudo){
     memset(msg,0,MAXDATASIZE);
     m = get_message(socket_fd,msg,MAXDATASIZE);
     printf("received from server '%s'\n",msg);
-    if(m == game_info){
-      //read the game info message
-      printf("game info message:\n %s\n",msg);
-      if(send(socket_fd,"ack",3,0) < 0){
-	fprintf(stderr,"send error:%s\n",strerror(errno));
-	exit(1);
+    if(m == players_info){
+      //read the players info message
+      printf("players info message:\n %s\n",msg);
+
+      int i = 13;//starting where the begining of the message ends
+      int m = 0;//players at the table
+      while(msg[i] != '\0'){
+	char digits[3];
+	char pseudo_p[20];//here could raise a problem
+	memset(digits,0,3);
+	memset(pseudo,0,20);
+	int k=0;
+	int l = 0;
+	int text = 0;//to separate between reading digits and pseudos
+	while(msg[i] != ';'){
+	  if(text == 0){
+	    while(msg[i] != ':'){
+	      digits[k] = msg[i];
+	      k++;
+	      i++;
+	    }
+	    i++;//skip ':'
+	    text = 1;
+	  }
+	  digits[k]='\0';
+	  pseudo_p[l] = msg[i];
+	  l++;
+	  i++;
+	}
+	int player_turn = atoi(digits);
+	pseudo_p[l]='\0';
+	strncpy(game->players_pseudos[m],pseudo_p,strlen(pseudo_p));
+	game->players_connected[m] = 1;
+	if(strcmp(pseudo_p,game->my_pseudo) == 0){
+	  game->my_tour_number = m;
+	}
+	m++;
+	i += 2;//skip the ";;" separator
       }
+      game->number_of_players = m;
+      
     }else if(m == req_connected){
       printf("requested connection validation\n");
       send_keep_connection(socket_fd);
     }
   }
-
-
+  
+  return game;
 }
 
 message get_message(int socket_fd,char* message, int size){
@@ -105,9 +154,9 @@ message get_message(int socket_fd,char* message, int size){
   }else if(strncmp(rbuf,"start_game",10) == 0){
     printf("start_game\n");
     return start_game;
-  }else if(strncmp(rbuf,"game_info--",11)==0){
+  }else if(strncmp(rbuf,"players_info=",13)==0){
     //printf("game info message:\n");
-    return game_info;
+    return players_info;
   }else return unknown;
   
 }
@@ -165,4 +214,56 @@ void send_keep_connection(int socket_fd){
   }
 }
 
+
+void print_game(game_instance* gi){
+  printf("you are %s \n",gi->my_pseudo);
+  for(int i = 0; i<gi->number_of_players; i++){
+    char string[200];
+    memset(string,0,200);
+    char action[10];
+    memset(action,0,10);
+    if(gi->players_actions[i] == NO_ACTION){
+      strncpy(action,"no_action",9);
+      action[9]='\0';
+    }else if(gi->players_actions[i] == HIT){
+      strncpy(action,"hit",3);
+      action[3] = '\0';
+    }else if(gi->players_actions[i] == STAND){
+      strncpy(action,"stand",5);
+      action[5]='\0';
+    }
+
+    char cards[100];
+    memset(cards,0,100);
+    if(gi->players_cards[i][0] == NULL){
+      sprintf(cards,"empty_hand");
+      cards[10] ='\0';
+    }else{
+      char* c = card_to_string(gi->players_cards[i][0]);
+      char cd[7];
+      memset(cd,0,7);
+      sprintf(cd,"%s, ",c);
+      strncpy(cards,cd,7);
+      for(int j = 1; j < gi->number_of_players; j++){
+	if(gi->players_cards[i][j] != NULL){
+	  c = card_to_string(gi->players_cards[i][0]);
+	  memset(cd,0,7);
+	  sprintf(cd,"%s, ",c);
+	  strncat(cards,cd,7);
+	}
+      }
+    }
+    char* connexion = NULL;
+    if(gi->players_connected[i] == 1){
+      connexion = "connected";
+    }else{
+      connexion = "disconnected";
+    }
+      
+    
+    sprintf(string,"%d %s %s %s %d %d %d -- %s\n",i,gi->players_pseudos[i],action,cards,gi->players_money[i],gi->players_bets[i], gi->cards_sum[i], connexion);
+
+    printf("%s\n",string);
+  }
+}
 

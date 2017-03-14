@@ -9,25 +9,26 @@ typedef enum{
   req_connected,
   pseudo_enabled,
   start_game,
-  game_info,
+  players_info,
   unknown
 } message;
 
 typedef struct game_instance{
   int socket_fd;//socket descriptor to speak with the server
-  char* my_pseudo;
-  int number_of_players;
-  char** players_pseudos;
-  action* player_actions;//this vector is updated at each tour
+  char my_pseudo[20];
+  int number_of_players;//max 10
+  char players_pseudos[10][20];
+  action players_actions[10];//this vector is updated at each tour
+  card_t* players_cards[10][20];//max 10 players at a table and one player can hold a maximum of 20 cards
+  int players_connected[10];//state of connexion of these players
+  int players_bets[10];
+  int players_money[10];
   int my_tour_number;
-  card_t cards_in_hand[20];//all cards in the hand starting with the first two given by the dealer
-  int cards_sum;
-  int waiting;//if we have to wait in order that the game begin
-  //int number_of_players;
+  int cards_sum[10];
 }game_instance;
 
 //this method initialize the game instance with some default values then
-//fetches all the other values drom the server
+//fetches all the other values from the server
 game_instance* init_game(int socket_fd, char* pseudo);
 
 //defines the main loop of the game executed in the client
@@ -42,15 +43,6 @@ void stand(game_instance* gi);
 
 //update the content of the data structure before printing
 void update(game_instance* gi);
-
-//fetch the players name from the server
-char** fetch_players_pseudos(int socket_fd);
-
-//ask for the maximum number of players at a table
-int fetch_number_of_players(int socket_fd);
-
-//get if the table is full so that the game can start
-int is_table_full(int socket_fd);
 
 message get_message(int socket_fd,char* message,int size);
 

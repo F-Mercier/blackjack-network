@@ -31,4 +31,5 @@ void print_card_package(card_package_t* cp);
 
 char* card_to_string(card_t* card);
 
+card_t* string_to_card(char* string);
 #endif//CARD_H

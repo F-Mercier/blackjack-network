@@ -201,10 +201,9 @@ void print_blackjack_tables(threads_manager* tm){
 
 void initialize_game(blackjack_table* table){
   printf("inside initialize game()\n");
-  /* while(table->full != 1){ */
-  /*   printf("table still not full\n"); */
-  /* } */
-  /* //send a start game message to all players */
-  /* send_start_game(table); */
-
+  //wait till the table is full
+  while(table->full != 1){
+    printf("table still not full\n");
+  }
+  
 }

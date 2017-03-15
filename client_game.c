@@ -160,6 +160,9 @@ message get_message(int socket_fd,char* message, int size){
   }else if(strncmp(rbuf,"player_disconnected=",20)==0){
     printf("player disconnected\n"); 
     return player_disconnected;
+  }else if(strncmp(rbuf,"first_card=",11)==0){
+    printf("first card received\n");
+    return first_card;
   }else return unknown;
   
 }

@@ -6,8 +6,7 @@
 
 typedef enum{
   CONNEXION,
-  CARD_1,
-  CARD_2,
+  CARDS,
   ACTION,
   BET,
   MONEY,
@@ -99,5 +98,15 @@ void send_start_game(int socket_fd);
  *tells the other clients from the same table that this client has disconnected
  */
 void send_disconnected_to_all(blackjack_table* table, player* p);
+
+/*
+ *sends first card to every client and informs the others about it
+ */
+void send_first_card(blackjack_table* table,card_package_t* pack);
+
+/*
+ *sends second card to every client and informs others about it
+ */
+void send_second_card(blackjack_table* table, card_package_t* pack);
 
 #endif //players_h

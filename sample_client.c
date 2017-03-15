@@ -90,7 +90,7 @@ int main(int argc, char** argv){
   memset(msg,0,2*MAXDATASIZE);
   //main loop for the client
   while(1){
-    system("clear");
+    //system("clear");
     //at each step in the loop check connectivity
     message m = get_message(sockfd,msg,2*MAXDATASIZE);
 
@@ -109,6 +109,31 @@ int main(int argc, char** argv){
 	  break;
 	}
       }
+    }
+    if(m == first_card){
+      char card[10];
+      memset(card,0,10);
+      int i = 11;
+      int k = 0;
+      while(msg[i] != '('){
+	card[k] = msg[i];
+	i++;
+	k++;
+      }
+      i++;//skip (
+      card[k] = '\0';
+      char pseudonim[20];
+      memset(pseudonim,0,20);
+      int l = 0;
+      while(msg[i] != ')'){
+	pseudonim[l] = msg[i];
+	i++;
+	k++;
+      }
+      pseudonim[l] = '\0';
+      
+      card_t* fcard = string_to_card(card);//to implement
+      add_card_to_hand(game,fcard,pseudonim);// to implement
     }
     if(m == req_connected){
       send_keep_connection(sockfd);

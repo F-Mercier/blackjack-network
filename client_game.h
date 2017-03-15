@@ -11,6 +11,7 @@ typedef enum{
   start_game,
   players_info,
   player_disconnected,
+  first_card,
   unknown
 } message;
 
@@ -55,6 +56,9 @@ void send_other_pseudo(int socket_fd,char* pseudo);
 
 //send a message to server to keep the connection with the client
 void send_keep_connection(int socket_fd);
+
+//adds the card to the list of cards of player pseudo
+void add_card_to_hand(game_instance* gi, card_t* card,char* pseudo);
 
 //manage the graphical output for the game
 void print_game(game_instance* gi);

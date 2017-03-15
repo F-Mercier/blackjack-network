@@ -33,10 +33,12 @@ typedef struct data_s data;
 
 void* run_game(void* arg){
   blackjack_table* table = (blackjack_table*)arg;
+  card_package_t* pack = init_card_package();
+  shuffle_cards(pack);
   initialize_game(table);
-  while(1){
-    //printf("inside main game loop\n");
-  }
+  table->info_changed = CARDS;
+  send_first_card(table,pack);
+  send_second_card(table,pack);
 }
 
 
@@ -82,6 +84,8 @@ void* run_thread(void* args){
   
   //print_blackjack_tables(tm);
   int is_running = 0;
+  int reg = 0;
+  int reg1 = 0;
   
   while(1){
     //check if full is 1 to tell client game started
@@ -94,6 +98,30 @@ void* run_thread(void* args){
       send_start_game(socket_fd);// to implement
       is_running = 1;
     }
+
+    
+    if(is_running == 1){
+      if(tm.tables[table_no]->info_changed == CARDS){
+	if(!reg){
+	  tm.tables[table_no]->count_views++;
+	  reg = 1;
+	}
+	while(tm.tables[table_no]->count_views != 0){
+	  printf("waiting for the dealer to send first card\n");
+	}
+	sleep(1);//wait for the other threads to exit from the while
+	
+	if(!reg1){
+	  tm.tables[table_no]->count_views++;
+	  reg1 = 1;
+	}
+	while(tm.tables[table_no]->count_views != 0){
+	  printf("waiting for the dealer to send the second card\n");
+	}
+	sleep(1);//wait for other threads to exit while
+      }
+    }
+	
 
     
     pthread_mutex_lock(&mutex);

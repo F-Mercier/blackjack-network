@@ -91,7 +91,7 @@ void* run_thread(void* args){
   threads_manager* tm =  d->tm;
   pseudo_db* pb = d->pb;
   
-  //int socket_fd = *(int*)args;
+  bind_pseudo(&pb,"dealer");
   
   //create a new player containig the socket descriptor and his pseudo
   player* p = init_player(socket_fd,pb);

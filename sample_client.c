@@ -84,6 +84,10 @@ int main(int argc, char** argv){
   
   game_instance* game = init_game(sockfd,pseudo);
   card_package_t* package = init_card_package();
+  card_package_t* hpackage = init_card_package();//hidden cards
+  for(int i=0; i<hpackage->counter; i++){
+    hpackage->cards[i].hidden = 1;
+  }
 
   printf("game initialized\n");
 
@@ -140,14 +144,23 @@ int main(int argc, char** argv){
       card_t fcard = string_to_card(card);
       //printf("test card: sym= %s, color= %s, val= %d, hidden= %d\n",fcard.symbol, fcard.color, fcard.value, fcard.hidden);
       //printf("before adding card to player %s hand\n",pseudonim);
-      for(int o = 0; o < 52; o++){
-	if(strcmp(fcard.symbol,package->cards[o].symbol)==0 &&
-	   strcmp(fcard.color,package->cards[o].color)==0){
-	  add_card_to_hand(game,&package->cards[o],pseudonim);
-	  break;
+      if(m==second_card && strcmp(pseudonim,"dealer")==0){
+	for(int o = 0; o < 52; o++){
+	  if(strcmp(fcard.symbol,hpackage->cards[o].symbol)==0 &&
+	     strcmp(fcard.color,hpackage->cards[o].color)==0){
+	    add_card_to_hand(game,&hpackage->cards[o],pseudonim);
+	    break;
+	  }
+	}
+      }else{
+	for(int o = 0; o < 52; o++){
+	  if(strcmp(fcard.symbol,package->cards[o].symbol)==0 &&
+	     strcmp(fcard.color,package->cards[o].color)==0){
+	    add_card_to_hand(game,&package->cards[o],pseudonim);
+	    break;
+	  }
 	}
       }
-      
       for(int p=0; p<game->number_of_players; p++){
 	printf("%s, %s\n", card_to_string(game->players_cards[p][0]), card_to_string(game->players_cards[p][1]));
       }

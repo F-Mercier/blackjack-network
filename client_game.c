@@ -53,6 +53,8 @@ game_instance* init_game(int socket_fd, char* pseudo){
   }
 
   printf("pseudo resolved\n");
+  int mm = 1;//players at the table-- there is already the dealer
+  
   while( m != start_game){
     //wait for players to join the game
     printf("inside waiting loop...\n");
@@ -64,7 +66,7 @@ game_instance* init_game(int socket_fd, char* pseudo){
       printf("players info message:\n %s\n",msg);
 
       int i = 13;//starting where the begining of the message ends
-      int m = 0;//players at the table
+      
       while(msg[i] != '\0'){
 	char digits[3];
 	char pseudo_p[20];//here could raise a problem
@@ -72,7 +74,7 @@ game_instance* init_game(int socket_fd, char* pseudo){
 	memset(pseudo,0,20);
 	int k=0;
 	int l = 0;
-	int text = 0;//to separate between reading digits and pseudos
+	int text = 0;//separate between reading digits and pseudos
 	while(msg[i] != ';'){
 	  if(text == 0){
 	    while(msg[i] != ':'){
@@ -90,21 +92,23 @@ game_instance* init_game(int socket_fd, char* pseudo){
 	}
 	int player_turn = atoi(digits);
 	pseudo_p[l]='\0';
-	strncpy(game->players_pseudos[m],pseudo_p,strlen(pseudo_p));
-	game->players_connected[m] = 1;
+	strncpy(game->players_pseudos[mm],pseudo_p,strlen(pseudo_p));
+	game->players_connected[mm] = 1;
 	if(strcmp(pseudo_p,game->my_pseudo) == 0){
-	  game->my_tour_number = m;
+	  game->my_tour_number = mm;
 	}
-	m++;
+	mm++;
 	i += 2;//skip the ";;" separator
       }
-      game->number_of_players = m;
+      game->number_of_players = mm;
       
     }else if(m == req_connected){
       printf("requested connection validation\n");
       send_keep_connection(socket_fd);
     }
   }
+  strncpy(game->players_pseudos[0],"dealer",strlen("dealer"));
+  game->players_connected[0] = 1;
   
   return game;
 }

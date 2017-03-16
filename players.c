@@ -269,6 +269,24 @@ void send_first_card(blackjack_table* table,card_package_t* pack){
       }
     }
   }
+  //send to clients the informations about the dealer
+
+  card_t* c = get_card(pack);
+  char* str = card_to_string(c);
+  
+  char msg[30];
+  memset(msg,0,30);
+  int length = 13+strlen(str)+strlen("dealer");
+  sprintf(msg,"%d:first_card=%s(dealer)",length,str);
+  for(int j = 0; j< table->number_of_players; j++){
+    printf("sending msg:%s to client %d\n",msg,j);
+    if(send(table->players[j]->socket_fd,msg,strlen(msg),0) == -1){
+      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+      return;
+    }
+  }
+  
+  
   //reset the counter to zero
   table->count_views == 0;
   printf("END sending first card\n");
@@ -295,6 +313,24 @@ void send_second_card(blackjack_table* table,card_package_t* pack){
       }
     }
   }
+  //send infos about the dealer to clients, this card is hidden
+  card_t* c = get_card(pack);
+  hide_card(c);
+  printf("SECOND DEALER CARD hidden = %d\n",c->hidden);
+  char* str = card_to_string(c);
+  
+  char msg[30];
+  memset(msg,0,30);
+  int length = 14+strlen(str)+strlen("dealer");
+  sprintf(msg,"%d:second_card=%s(dealer)",length,str);
+  for(int j = 0; j< table->number_of_players; j++){
+    printf("sending msg:%s to client %d\n",msg,j);
+    if(send(table->players[j]->socket_fd,msg,strlen(msg),0) == -1){
+      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+      return;
+    }
+  }
+  
   //reset the counter to zero
   table->count_views == 0;
   printf("END sending second card\n");

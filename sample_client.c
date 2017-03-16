@@ -165,6 +165,67 @@ int main(int argc, char** argv){
 	printf("%s, %s\n", card_to_string(game->players_cards[p][0]), card_to_string(game->players_cards[p][1]));
       }
     }
+
+    if(m == req_bet){
+      printf("enter the amount of money you want to bet : ");
+      int b;
+      scanf("%d",&b);
+      int temp = b;
+      int nr_digits=0;
+      while(temp!=0){
+	temp /= 10;
+	nr_digits++;
+      }
+      char message[30];
+      memset(message,0,30);
+      sprintf(message,"send_bet:%d",b);
+      printf(" bet message = %s",message);
+      if(send(sockfd,message,strlen(message),0) == -1){
+	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	return;
+      }
+
+      for(int j = 0; j<game->number_of_players; j++){
+	if(strcmp(game->players_pseudos[j],game->my_pseudo) == 0){
+	  game->players_bets[j] = b;
+	  break;
+	}
+      }
+    }
+
+    if(m == spread_bet){
+      printf("registering the bet from another player\n");
+      char pseudo[20];
+      char bet[10];
+      memset(bet,0,10);
+      memset(pseudo,0,20);
+      int i = 11;
+      int k = 0;
+      int l = 0;
+      while(msg[i] != ';'){
+	pseudo[k] = msg[i];
+	k++;
+	i++;
+      }
+      pseudo[k] = '\0';
+      i++;
+      while(msg[i] != ')'){
+	bet[l] = msg[i];
+	l++;
+	i++;
+      }
+      bet[l] = '\0';
+      int b = atoi(bet);
+      printf("player %s has bet %d\n",pseudo,b);
+      //registering the bet
+      for(int j = 0; j<game->number_of_players; j++){
+	if(strcmp(game->players_pseudos[j],pseudo) == 0){
+	  game->players_bets[j] = b;
+	  break;
+	}
+      }
+    }
+    
     if(m == req_connected){
       send_keep_connection(sockfd);
     }

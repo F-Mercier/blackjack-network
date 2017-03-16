@@ -169,6 +169,7 @@ blackjack_table* init_blackjack_table(int size){
   pt->full = 0;
   pt->count_views = 0;
   pt->info_changed = NO_INFO;
+  pt->tour = 0;
   return pt;
 }
 
@@ -336,4 +337,44 @@ void send_second_card(blackjack_table* table,card_package_t* pack){
   printf("END sending second card\n");
 }
 
+/*
+void ask_for_bets(blackjack_table* table){
+  printf("inside ask_for_bets method\n");
+  for(int i = 0; i < table->number_of_players; i++){
+    char msg[30];
+    memset(msg,0, 30);
+    int length = 9 + strlen(table->players[i]->pseudo);
+    sprintf(msg,"%d:req_bet(%s)",length,table->players[i]->pseudo);
+    printf("asking player %s for his bet\n",table->players[i]->pseudo);
+    if(send(table->players[i]->socket_fd,msg,strlen(msg),0) == -1){
+      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+      return;
+    }
 
+    //get the answer from client i only
+    int numbytes; 
+    char readbuf[20];
+    memset(readbuf,0,20);
+    if((numbytes = recv(table->players[i]->socket_fd,readbuf,sizeof(readbuf),0)) < 0){
+      fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno));
+      exit(1);
+    }
+    
+    printf("numbytes =  %d\n", numbytes);
+    readbuf[numbytes] = '\0';
+    printf("received msg: %s\n",readbuf);
+
+    if(strncmp(msg,"send_bet:",9) != 0){
+      memset(readbuf,0,20);
+      if((numbytes = recv(table->players[i]->socket_fd,readbuf,sizeof(readbuf),0)) < 0){
+  	fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno));
+  	exit(1);
+      }
+      
+      printf("numbytes =  %d\n", numbytes);
+      readbuf[numbytes] = '\0';
+      printf("received msg: %s\n",readbuf);
+    }
+  }
+}
+*/

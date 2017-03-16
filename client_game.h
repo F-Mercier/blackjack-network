@@ -13,6 +13,8 @@ typedef enum{
   player_disconnected,
   first_card,
   second_card,
+  req_bet,
+  spread_bet,
   unknown
 } message;
 
@@ -24,6 +26,7 @@ typedef struct game_instance{
   action players_actions[10];//this vector is updated at each tour
   card_t* players_cards[10][20];//max 10 players at a table and one player can hold a maximum of 20 cards
   int players_connected[10];//state of connexion of these players
+  int is_playing[10];
   int players_bets[10];
   int players_money[10];
   int my_tour_number;

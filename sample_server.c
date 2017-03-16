@@ -49,6 +49,13 @@ void* run_game(void* arg){
   table->info_changed = CARD2;
   send_second_card(table,pack);
   printf("\n\nFINISH SENDING SECOND CARD\n\n");
+  table->info_changed = BET;
+  while(table->tour != table->number_of_players){
+
+  }
+  table->info_changed = ACTION;
+  table->tour = 0;
+  printf("TEMPORARY AT THE END\n");
 }
 
 
@@ -90,8 +97,10 @@ void* run_thread(void* args){
   int socket_fd = *(d->socket_fd);
   threads_manager* tm =  d->tm;
   pseudo_db* pb = d->pb;
-  
-  bind_pseudo(&pb,"dealer");
+
+  if(check_existance(pb,"dealer")==0){
+    bind_pseudo(&pb,"dealer");
+  }
   
   //create a new player containig the socket descriptor and his pseudo
   player* p = init_player(socket_fd,pb);
@@ -100,6 +109,15 @@ void* run_thread(void* args){
   int table_no = add_player(tm,p);
   pthread_mutex_unlock(&mutex);
   print_pseudos(pb);
+
+  int place;
+  //find my place at the table
+  for(int i = 0; i < tm->tables[table_no]->size; i++){
+    if(strcmp(tm->tables[table_no]->players[i]->pseudo,p->pseudo)==0){
+      place = i;
+      break;
+    }
+  }
   
   //print_blackjack_tables(tm);
   int is_running = 0;
@@ -133,6 +151,64 @@ void* run_thread(void* args){
       if(reg1==0 && tm->tables[table_no]->info_changed == CARD2){
 	tm->tables[table_no]->count_views++;
 	reg1 = 1;
+      }
+
+      if(tm->tables[table_no]->info_changed == BET && tm->tables[table_no]->tour == place){
+
+	char msg[30];
+	memset(msg,0, 30);
+	int length = 9;
+	sprintf(msg,"0%d:req_bet",length);
+	printf("asking player %s for his bet\n",p->pseudo);
+	if(send(p->socket_fd,msg,strlen(msg),0) == -1){
+	  fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	  return;
+	}
+
+	int numbytes; 
+	char readbuf[20];
+	memset(readbuf,0,20);
+	if((numbytes = recv(p->socket_fd,readbuf,sizeof(readbuf),0)) < 0){
+	  fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno));
+	  exit(1);
+	}
+	
+	printf("numbytes =  %d\n", numbytes);
+	readbuf[numbytes] = '\0';
+	printf("received msg: %s\n",readbuf);
+
+	//turn string to int
+	int i = 9;
+	int k = 0;
+	char bet[10];
+	memset(bet,0,10);
+	while(readbuf[i]!='\0'){
+	  bet[k] = readbuf[i];
+	  k++;
+	  i++;
+	}
+	bet[k] = '\0';
+
+	int bet_val = atoi(bet);
+	printf("the bet is %d\n",bet_val);
+
+	
+	
+	memset(msg,0,30);
+	length = 13 + strlen(p->pseudo)+ strlen(bet);
+	sprintf(msg,"%d:spread_bet(%s;%d)",length,p->pseudo,bet_val);
+	printf("PREPARING TO SEND BET to all clients\n");
+	for(int i = 0; i< tm->tables[table_no]->number_of_players; i++){
+	  if(p->socket_fd != tm->tables[table_no]->players[i]->socket_fd){
+	    printf("giving chosen bet to %s\n",tm->tables[table_no]->players[i]->pseudo);
+	    if(send(tm->tables[table_no]->players[i]->socket_fd,msg,strlen(msg),0) == -1){
+	      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	      return;
+	    }
+	  }
+	}
+
+	tm->tables[table_no]->tour++;
       }
     }
 	

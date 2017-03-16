@@ -49,6 +49,7 @@ game_instance* init_game(int socket_fd, char* pseudo){
     game->players_money[i] = 500;
     game->cards_sum[i] = 0;
     game->players_connected[i] = 0;//initially all players are disconnected
+    game->is_playing[i] = 0;//initially no one is playing
     
   }
 
@@ -170,6 +171,12 @@ message get_message(int socket_fd,char* message, int size){
   }else if(strncmp(rbuf,"second_card=",12)==0){
     printf("\n\n\n\nsecond card received\n\n\n\n");
     return second_card;
+  }else if(strncmp(rbuf,"req_bet",7) == 0){
+    printf("request to bet\n");
+    return req_bet;
+  }else if(strncmp(rbuf,"spread_bet",10) == 0){
+    printf("bet from another player\n");
+    return spread_bet;
   }else return unknown;
   
 }
@@ -272,9 +279,14 @@ void print_game(game_instance* gi){
     }else{
       connexion = "disconnected";
     }
-      
+    char* playing = NULL;
+    if(gi->is_playing[i] == 1){
+      playing = "playing";
+    }else{
+      playing = "waiting";
+    }
     
-    sprintf(string,"%d pseudo: %s ; action: %s ; cards: { %s } ; money: %d ; bet: %d ; sum: %d -- %s\n",i,gi->players_pseudos[i],action,cards,gi->players_money[i],gi->players_bets[i], gi->cards_sum[i], connexion);
+    sprintf(string,"%d pseudo: %s ; action: %s ; cards: { %s } ; money: %d ; bet: %d ; sum: %d ; state: %s -- %s\n",i,gi->players_pseudos[i],action,cards,gi->players_money[i],gi->players_bets[i], gi->cards_sum[i], playing, connexion);
 
     printf("%s\n",string);
   }

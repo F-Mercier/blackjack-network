@@ -42,6 +42,7 @@ typedef struct blackjack_table{
   int full; //boolean: 1 - table is full ; 0 - table is not yet full
   int count_views;// how many threads have got the information; it is reset by the game thread once count_views==size
   info_t info_changed;
+  int tour;
 }blackjack_table;
 
 /*
@@ -109,5 +110,10 @@ void send_first_card(blackjack_table* table,card_package_t* pack);
  *sends second card to every client and informs others about it
  */
 void send_second_card(blackjack_table* table, card_package_t* pack);
+
+/*
+ *asks the clients in order what are their bets
+ */
+void ask_for_bets(blackjack_table* table);
 
 #endif //players_h

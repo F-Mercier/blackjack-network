@@ -161,8 +161,11 @@ message get_message(int socket_fd,char* message, int size){
     printf("player disconnected\n"); 
     return player_disconnected;
   }else if(strncmp(rbuf,"first_card=",11)==0){
-    printf("first card received\n");
+    printf("\n\n\n\nfirst card received\n\n\n\n");
     return first_card;
+  }else if(strncmp(rbuf,"second_card=",12)==0){
+    printf("\n\n\n\nsecond card received\n\n\n\n");
+    return second_card;
   }else return unknown;
   
 }
@@ -224,8 +227,8 @@ void send_keep_connection(int socket_fd){
 void print_game(game_instance* gi){
   printf("you are %s \n",gi->my_pseudo);
   for(int i = 0; i<gi->number_of_players; i++){
-    char string[200];
-    memset(string,0,200);
+    char string[300];
+    memset(string,0,300);
     char action[10];
     memset(action,0,10);
     if(gi->players_actions[i] == NO_ACTION){
@@ -245,17 +248,17 @@ void print_game(game_instance* gi){
       sprintf(cards,"empty_hand");
       cards[10] ='\0';
     }else{
-      char* c = card_to_string(gi->players_cards[i][0]);
-      char cd[7];
-      memset(cd,0,7);
+      char* c = show_card(gi->players_cards[i][0]);
+      char cd[10];
+      memset(cd,0,10);
       sprintf(cd,"%s, ",c);
-      strncpy(cards,cd,7);
+      strncpy(cards,cd,10);
       for(int j = 1; j < gi->number_of_players; j++){
 	if(gi->players_cards[i][j] != NULL){
-	  c = card_to_string(gi->players_cards[i][0]);
-	  memset(cd,0,7);
+	  c = show_card(gi->players_cards[i][j]);
+	  memset(cd,0,10);
 	  sprintf(cd,"%s, ",c);
-	  strncat(cards,cd,7);
+	  strncat(cards,cd,10);
 	}
       }
     }
@@ -267,9 +270,30 @@ void print_game(game_instance* gi){
     }
       
     
-    sprintf(string,"%d %s %s %s %d %d %d -- %s\n",i,gi->players_pseudos[i],action,cards,gi->players_money[i],gi->players_bets[i], gi->cards_sum[i], connexion);
+    sprintf(string,"%d pseudo: %s ; action: %s ; cards: { %s } ; money: %d ; bet: %d ; sum: %d -- %s\n",i,gi->players_pseudos[i],action,cards,gi->players_money[i],gi->players_bets[i], gi->cards_sum[i], connexion);
 
     printf("%s\n",string);
   }
 }
 
+void add_card_to_hand(game_instance* gi, card_t* card, char* pseudo){
+  //printf("ADDING CARD TO PLAYER: %s\n",pseudo);
+  int index = -1;
+  for(int i = 0; i < gi->number_of_players; i++){
+    if(strcmp(gi->players_pseudos[i], pseudo) == 0){
+      index = i;
+      break;
+    }
+  }
+  //printf("\n\nINDEX = %d\n\n", index);
+  if(index != -1){
+    for(int j = 0; j < 20; j++){
+      if(gi->players_cards[index][j] == NULL){
+	gi->players_cards[index][j] = card;
+	break;
+      }
+    }
+  }else{
+    printf("this player does not exists in the game\n");
+  }
+}

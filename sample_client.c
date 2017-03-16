@@ -83,6 +83,7 @@ int main(int argc, char** argv){
 
   
   game_instance* game = init_game(sockfd,pseudo);
+  card_package_t* package = init_card_package();
 
   printf("game initialized\n");
 
@@ -110,15 +111,18 @@ int main(int argc, char** argv){
 	}
       }
     }
-    if(m == first_card){
+    if(m == first_card || m == second_card){
+      printf("\n\nRECEIVE FIRST CARD.....OR SECOND CARD.....\n\n");
       char card[10];
       memset(card,0,10);
-      int i = 11;
+      int i;
+      if(m == first_card) i=11;
+      else i=12;
       int k = 0;
       while(msg[i] != '('){
-	card[k] = msg[i];
-	i++;
-	k++;
+      	card[k] = msg[i];
+      	i++;
+      	k++;
       }
       i++;//skip (
       card[k] = '\0';
@@ -126,14 +130,27 @@ int main(int argc, char** argv){
       memset(pseudonim,0,20);
       int l = 0;
       while(msg[i] != ')'){
-	pseudonim[l] = msg[i];
-	i++;
-	k++;
+      	pseudonim[l] = msg[i];
+      	i++;
+      	l++;
       }
       pseudonim[l] = '\0';
       
-      card_t* fcard = string_to_card(card);//to implement
-      add_card_to_hand(game,fcard,pseudonim);// to implement
+      //printf("before converting string to card\n");
+      card_t fcard = string_to_card(card);
+      //printf("test card: sym= %s, color= %s, val= %d, hidden= %d\n",fcard.symbol, fcard.color, fcard.value, fcard.hidden);
+      //printf("before adding card to player %s hand\n",pseudonim);
+      for(int o = 0; o < 52; o++){
+	if(strcmp(fcard.symbol,package->cards[o].symbol)==0 &&
+	   strcmp(fcard.color,package->cards[o].color)==0){
+	  add_card_to_hand(game,&package->cards[o],pseudonim);
+	  break;
+	}
+      }
+      
+      for(int p=0; p<game->number_of_players; p++){
+	printf("%s, %s\n", card_to_string(game->players_cards[p][0]), card_to_string(game->players_cards[p][1]));
+      }
     }
     if(m == req_connected){
       send_keep_connection(sockfd);
@@ -141,6 +158,7 @@ int main(int argc, char** argv){
 
     printf("before printing the game\n\n");
     print_game(game);
+    memset(msg,0,2*MAXDATASIZE);
     
   }
 

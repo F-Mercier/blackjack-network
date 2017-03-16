@@ -6,7 +6,8 @@
 
 typedef enum{
   CONNEXION,
-  CARDS,
+  CARD1,
+  CARD2,
   ACTION,
   BET,
   MONEY,
@@ -40,7 +41,7 @@ typedef struct blackjack_table{
   player** players; // array of players
   int full; //boolean: 1 - table is full ; 0 - table is not yet full
   int count_views;// how many threads have got the information; it is reset by the game thread once count_views==size
-  info_t* info_changed;
+  info_t info_changed;
 }blackjack_table;
 
 /*

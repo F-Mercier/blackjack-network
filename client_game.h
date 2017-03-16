@@ -12,6 +12,7 @@ typedef enum{
   players_info,
   player_disconnected,
   first_card,
+  second_card,
   unknown
 } message;
 

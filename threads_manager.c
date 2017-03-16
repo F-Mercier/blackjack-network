@@ -138,8 +138,8 @@ int remove_player(threads_manager* tm,int table_no, player* p, pseudo_db* pb){
 
 int check_connectivity(player* p, int timeout){
 
-  printf("\ninside check_connectivity()\n");
-  char* isconnected_msg = "14:req_connected";
+  //printf("\ninside check_connectivity()\n");
+  char* isconnected_msg = "13:req_connected";
   
   int sent = send(p->socket_fd,isconnected_msg,strlen(isconnected_msg),0);
   if( sent == -1){
@@ -147,8 +147,8 @@ int check_connectivity(player* p, int timeout){
     return -1;
   }
 
-  printf("sent check connection message to client\n");
-  printf("number of bytes sent : %d/%d\n",sent,strlen(isconnected_msg));
+  //printf("sent check connection message to client\n");
+  //printf("number of bytes sent : %d/%d\n",sent,strlen(isconnected_msg));
   
   fd_set readfds;
   struct timeval t;
@@ -198,12 +198,3 @@ void print_blackjack_tables(threads_manager* tm){
   }
 }
 
-
-void initialize_game(blackjack_table* table){
-  printf("inside initialize game()\n");
-  //wait till the table is full
-  while(table->full != 1){
-    printf("table still not full\n");
-  }
-  
-}

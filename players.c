@@ -239,17 +239,30 @@ void send_disconnected_to_all(blackjack_table* table, player* p){
       
 
 void send_first_card(blackjack_table* table,card_package_t* pack){
-  while(table->count_views != table->number_of_players || table->info_changed != CARDS){
-    printf("waiting that all threads are ready to send the card\n");
+  printf("inside send_first_card()\n");
+  while(table->count_views != table->number_of_players){
+    //printf("waiting that all threads are ready to send the card\n");
   }
+  printf("out of inner while LOOP\n");
+  print_card_package(pack);
   for(int i = 0; i< table->number_of_players; i++){
     card_t* c = get_card(pack);
+    printf("INFO: after get_card(pack) call\n");
+    printf("got card c.symbol=%s\n",c->symbol);
+    printf("after accessing card info\n");
+    /* if(c == NULL){ */
+    /*   printf("ERROR card is null\n"); */
+    /* }else{ */
+    /*   printf("GOOD card not null\n"); */
+    /* } */
     char* str = card_to_string(c);
+    printf("INFO: after card_to_string(c) found %s\n",str);
     char msg[30];
     memset(msg,0,30);
-    int length = 11+strlen(str)+strlen(table->players[i]->pseudo);
+    int length = 13+strlen(str)+strlen(table->players[i]->pseudo);
     sprintf(msg,"%d:first_card=%s(%s)",length,str,table->players[i]->pseudo);
     for(int j = 0; j< table->number_of_players; j++){
+      printf("sending msg:%s to client %d\n",msg,j);
       if(send(table->players[j]->socket_fd,msg,strlen(msg),0) == -1){
 	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
 	return;
@@ -258,6 +271,33 @@ void send_first_card(blackjack_table* table,card_package_t* pack){
   }
   //reset the counter to zero
   table->count_views == 0;
+  printf("END sending first card\n");
+}
+
+void send_second_card(blackjack_table* table,card_package_t* pack){
+  printf("inside send_second_card()\n");
+  printf("views= %d; players = %d\n",table->count_views,table->number_of_players);
+  while(table->count_views != table->number_of_players){
+    //printf("waiting that all threads are ready to send the card\n");
+  }
+  for(int i = 0; i< table->number_of_players; i++){
+    card_t* c = get_card(pack);
+    char* str = card_to_string(c);
+    char msg[30];
+    memset(msg,0,30);
+    int length = 14+strlen(str)+strlen(table->players[i]->pseudo);
+    sprintf(msg,"%d:second_card=%s(%s)",length,str,table->players[i]->pseudo);
+    for(int j = 0; j< table->number_of_players; j++){
+      printf("sending message %s to client %d\n",msg,j);
+      if(send(table->players[j]->socket_fd,msg,strlen(msg),0) == -1){
+	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	return;
+      }
+    }
+  }
+  //reset the counter to zero
+  table->count_views == 0;
+  printf("END sending second card\n");
 }
 
 

@@ -3,8 +3,8 @@
 
 typedef struct card_s{
   int hidden;//1 if hidden else 0
-  char symbol[3];
-  char color;
+  char* symbol;
+  char* color;
   int value;
 }card_t;
 
@@ -15,7 +15,7 @@ typedef struct card_package_s{
 
 typedef enum{HIT, STAND, NO_ACTION} action;
 
-card_t init_card(char* symbol, char color, int value, int hidden);
+card_t init_card(char* symbol, char* color, int value, int hidden);
 
 void reveal_card(card_t* card);
 
@@ -31,5 +31,7 @@ void print_card_package(card_package_t* cp);
 
 char* card_to_string(card_t* card);
 
-card_t* string_to_card(char* string);
+char* show_card(card_t* card);
+
+card_t string_to_card(char* string);
 #endif//CARD_H

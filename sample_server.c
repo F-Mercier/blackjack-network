@@ -157,6 +157,16 @@ void* run_thread(void* args){
 	reg1 = 1;
       }
 
+
+
+
+
+
+
+
+
+
+      
       if(tm->tables[table_no]->info_changed == BET && tm->tables[table_no]->tour == place){
 
 	char msg[30];
@@ -216,6 +226,18 @@ void* run_thread(void* args){
       }
 
 
+
+
+
+
+
+
+
+
+
+
+
+      
       if(tm->tables[table_no]->info_changed == ACTION && tm->tables[table_no]->tour == place){
 
 	char* play_msg = "09:play_turn";
@@ -240,12 +262,12 @@ void* run_thread(void* args){
 	memset(msg,0,20);
 	sprintf(msg,"0%d:%s",strlen(readbuf),readbuf);
 
-	for(int i = 0; i<tm->tables[table_no]->number_of_players; i++){
-	  if(send(tm->tables[table_no]->players[i]->socket_fd,msg,strlen(msg),0) == -1){
-	    fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
-	    return;
-	  }
-	}
+	/* for(int i = 0; i<tm->tables[table_no]->number_of_players; i++){ */
+	/*   if(send(tm->tables[table_no]->players[i]->socket_fd,msg,strlen(msg),0) == -1){ */
+	/*     fprintf(stderr,"send: error while sending : %s\n", strerror(errno)); */
+	/*     return; */
+	/*   } */
+	/* } */
 
 	if(strncmp(readbuf,"stand",5) == 0){
 	  char msg[30];
@@ -271,7 +293,7 @@ void* run_thread(void* args){
 	  for(int j = 0; j< tm->tables[table_no]->number_of_players; j++){
 	    printf("sending message %s to client %d\n",msg,j);
 	    int rv;
-	    if((rv=send(p->socket_fd,msg,strlen(msg),0)) == -1){
+	    if((rv=send(tm->tables[table_no]->players[j]->socket_fd,msg,strlen(msg),0)) == -1){
 	      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
 	      return;
 	    }

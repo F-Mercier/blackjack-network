@@ -228,16 +228,20 @@ int main(int argc, char** argv){
 
     if(m == play_turn){
 
+      char* str;
       char act[6];
       memset(act,0,6);
       printf("What action do you choose? hit or stand ? : ");
-      fgets(act,6,stdin);
-      while(strncmp(act,"hit",3) != 0 && strncmp(act,"stand",5)!=0){
+      scanf("%s",act);
+      while(strstr(act,"hit") != NULL && strstr(act,"stand")!=NULL){
 	printf("wrong choice! Try again hit or stand ? : ");
 	memset(act,0,6);
 	fgets(act,6,stdin);
 	printf("%s\n",act);
       }
+      /* if(strstr(act,"hit")!=NULL){ */
+      /* 	str = "hit"; */
+      /* } */
 
       if(send(sockfd,act,strlen(act),0) == -1){
 	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
@@ -248,6 +252,7 @@ int main(int argc, char** argv){
     }
 
     if(m == update_stand){
+      printf("PLAYER CALLED A STAND ACTION\n");
       //do stuff to update client game
       char pseudo[20];
       memset(pseudo,0,20);
@@ -268,6 +273,7 @@ int main(int argc, char** argv){
 
     
     if(m == asked_card){
+      printf("PLAYER CALLED A HIT ACTION\n");
       //update client game
       //printf("inside hit_action\n");
       char pseudo[20];
@@ -295,12 +301,20 @@ int main(int argc, char** argv){
       printf("\n\ncard = %s\n\n",card);
       card_t crd = string_to_card(card);
 
+      int ind;
+      for(int i = 0; i< game->number_of_players; i++){
+	if(strcmp(pseudo,game->players_pseudos[i]) == 0){
+	  ind = i;
+	  break;
+	}
+      }
+
       for(int o = 0; o < 52; o++){
 	if(strcmp(crd.symbol,package->cards[o].symbol)==0 &&
 	   strcmp(crd.color,package->cards[o].color)==0){
 	  for(int i = 0; i<20; i++){
-	    if(game->players_cards[game->my_tour_number][i] == NULL){
-	      game->players_cards[game->my_tour_number][i] = &package->cards[o];
+	    if(game->players_cards[ind][i] == NULL){
+	      game->players_cards[ind][i] = &package->cards[o];
 	      break;
 	    }
 	  }

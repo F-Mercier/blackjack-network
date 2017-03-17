@@ -139,7 +139,7 @@ message get_message(int socket_fd,char* message, int size){
     exit(1);
   }
   rbuf[numbytes] = '\0';
-  //printf("get_message(): received '%s'\n",rbuf);
+  printf("GET MESSAGE(): received '%s'\n",rbuf);
   strncpy(message,rbuf,size_d);
 
   if(strncmp(rbuf,"req_pseudo",10) == 0 && global == 0){

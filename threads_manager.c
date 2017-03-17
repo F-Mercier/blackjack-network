@@ -113,7 +113,7 @@ int remove_blackjack_table(threads_manager* tm,int table_no){
 /* } */
 
 int add_player(threads_manager* tm, player* p){
-  printf("inside add_player()\n");
+  //printf("inside add_player()\n");
   if(tm->index == 0){//there is no allocated table
     printf("first table initialization\n");
     add_blackjack_table(tm);

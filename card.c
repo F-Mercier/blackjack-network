@@ -83,6 +83,7 @@ char* card_to_string(card_t* card){
 }
 
 char* show_card(card_t* card){
+  if(card == NULL) return "empty";
   if(card->hidden == 1){
     return "???";
   }else{
@@ -129,7 +130,7 @@ card_t string_to_card(char* string){
   digit_hidden[1] = '\0';
   hidden = atoi(digit_hidden);
   value = atoi(digits_value);
-  printf("Constructed card is : %s %s %d %d\n",symbol,color,value,hidden);
+  //printf("Constructed card is : %s %s %d %d\n",symbol,color,value,hidden);
   card_t card = init_card(symbol,color,value,hidden);
   return card;
 }

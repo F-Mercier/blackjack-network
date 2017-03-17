@@ -51,7 +51,7 @@ void* run_game(void* arg){
   printf("\n\nFINISH SENDING SECOND CARD\n\n");
   table->info_changed = BET;
   while(table->tour != table->number_of_players){
-
+      
   }
   table->info_changed = ACTION;
   table->tour = 0;
@@ -123,6 +123,8 @@ void* run_thread(void* args){
   int is_running = 0;
   int reg = 0;
   int reg1 = 0;
+  card_package_t* cp = init_card_package();
+  shuffle_cards(cp);
   
   while(1){
     //check if full is 1 to tell client game started
@@ -234,27 +236,32 @@ void* run_thread(void* args){
 	readbuf[numbytes] = '\0';
 	printf("received msg: %s\n",readbuf);
 
-	if(strncmp(readbuf,"stand",5) == 0){
-	  char update_msg[60];
-	  memset(update_msg,0,60);
-	  int len = 14 + strlen(p->pseudo);
-	  sprintf(update_msg,"%d:update_stand(%s)",len,p->pseudo);
-	  for(int i = 0; i< tm->tables[table_no]->number_of_players; i++){
-	    if(p->socket_fd != tm->tables[table_no]->players[i]->socket_fd){
-	      printf("giving chosen bet to %s\n",tm->tables[table_no]->players[i]->pseudo);
-	      if(send(tm->tables[table_no]->players[i]->socket_fd,update_msg,strlen(update_msg),0) == -1){
-		fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
-		return;
-	      }
-	    }
-	  }
+	char msg[20];
+	memset(msg,0,20);
+	sprintf(msg,"0%d:%s",strlen(readbuf),readbuf);
 
-	  tm->tables[table_no]->tour++;
+	for(int i = 0; i<tm->tables[table_no]->number_of_players; i++){
+	  if(send(tm->tables[table_no]->players[i]->socket_fd,msg,strlen(msg),0) == -1){
+	    fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	    return;
+	  }
+	}
+
+	if(strncmp(readbuf,"stand",5) == 0){
+	  char msg[30];
+	  memset(msg,0,30);
+	  int len = 14 + strlen(p->pseudo);
+	  sprintf(msg,"%d:update_stand(%s)",len,p->pseudo);
+	  for(int i=0; i<tm->tables[table_no]->number_of_players; i++){
+	    if((send(tm->tables[table_no]->players[i]->socket_fd,msg,strlen(msg),0)) == -1){
+	      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	      return;
+	    }
+	    
+	    tm->tables[table_no]->tour++;
+	  }
 	  
 	}else if(strncmp(readbuf,"hit",3)==0){
-	  card_package_t* cp = init_card_package();
-	  shuffle_cards(cp);
-	  shuffle_cards(cp);
 	  card_t* c = get_card(cp);
 	  char* str = card_to_string(c);
 	  char msg[30];
@@ -263,19 +270,21 @@ void* run_thread(void* args){
 	  sprintf(msg,"%d:asked_card=%s(%s)",length,str,p->pseudo);
 	  for(int j = 0; j< tm->tables[table_no]->number_of_players; j++){
 	    printf("sending message %s to client %d\n",msg,j);
-	    if(send(p->socket_fd,msg,strlen(msg),0) == -1){
+	    int rv;
+	    if((rv=send(p->socket_fd,msg,strlen(msg),0)) == -1){
 	      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
 	      return;
 	    }
+	    printf("SENT %d data\n",rv);  
 	  }
 	}
-      }	
+      }
     }
 	
 
     
     pthread_mutex_lock(&mutex);
-    if(check_connectivity(p,15) == 0){
+    if(check_connectivity(p,60) == 0){
       send_disconnected_to_all(tm->tables[table_no],p);//to implement
       remove_player(tm,table_no,p,pb);
     }

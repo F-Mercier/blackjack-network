@@ -21,18 +21,18 @@ game_instance* init_game(int socket_fd, char* pseudo){
   memset(msg,0,MAXDATASIZE);
   message m = get_message(socket_fd,msg,MAXDATASIZE);
   while(m != pseudo_enabled){
-    printf("inside pseudo init while loop\n");
-    printf("message received: %s\n",msg);
+    //printf("inside pseudo init while loop\n");
+    //printf("message received: %s\n",msg);
     if(m == req_pseudo){
-      printf("sending pseudo to server\n");
+      //printf("sending pseudo to server\n");
       send_pseudo(socket_fd, pseudo);
     }else if(m == req_other_pseudo){
-      printf("retrying to send pseudo to server\n");
+      //printf("retrying to send pseudo to server\n");
       send_other_pseudo(socket_fd,pseudo);
       memset(game->my_pseudo,0,20);
       strncpy(game->my_pseudo,pseudo,strlen(pseudo));
     }else{
-      printf("message not recognized\n");
+      //printf("message not recognized\n");
     }
     memset(msg,0,MAXDATASIZE);
     m = get_message(socket_fd,msg,MAXDATASIZE);
@@ -53,18 +53,18 @@ game_instance* init_game(int socket_fd, char* pseudo){
     
   }
 
-  printf("pseudo resolved\n");
+  //printf("pseudo resolved\n");
   int mm = 1;//players at the table-- there is already the dealer
   
   while( m != start_game){
     //wait for players to join the game
-    printf("inside waiting loop...\n");
+    //printf("inside waiting loop...\n");
     memset(msg,0,MAXDATASIZE);
     m = get_message(socket_fd,msg,MAXDATASIZE);
-    printf("received from server '%s'\n",msg);
+    //printf("received from server '%s'\n",msg);
     if(m == players_info){
       //read the players info message
-      printf("players info message:\n %s\n",msg);
+      //printf("players info message:\n %s\n",msg);
 
       int i = 13;//starting where the begining of the message ends
       
@@ -104,7 +104,7 @@ game_instance* init_game(int socket_fd, char* pseudo){
       game->number_of_players = mm;
       
     }else if(m == req_connected){
-      printf("requested connection validation\n");
+      //printf("requested connection validation\n");
       send_keep_connection(socket_fd);
     }
   }
@@ -123,7 +123,7 @@ message get_message(int socket_fd,char* message, int size){
   
   memset(rbuf,0,MAXDATASIZE);
   memset(size_data,0,4);
-  printf("before reading from the server\n");
+  //printf("before reading from the server\n");
   //read the header on 2 chars
   //read something like 4:toto or 11:req: pseudo
   if((bytes = recv(socket_fd,size_data,3,0)) == -1){
@@ -132,57 +132,66 @@ message get_message(int socket_fd,char* message, int size){
   }
   size_data[bytes-1] = '\0';
   size_d = atoi(size_data);
-  printf("We should read : %d bytes of data\n",size_d);
+  //printf("We should read : %d bytes of data\n",size_d);
   
   if((numbytes = recv(socket_fd,rbuf,size_d,0)) == -1){
     fprintf(stderr,"recv : error while reading from the server : %s\n",strerror(errno));
     exit(1);
   }
   rbuf[numbytes] = '\0';
-  printf("get_message(): received '%s'\n",rbuf);
+  //printf("get_message(): received '%s'\n",rbuf);
   strncpy(message,rbuf,size_d);
 
   if(strncmp(rbuf,"req_pseudo",10) == 0 && global == 0){
     global++;
-    printf("req_pseudo\n");
+    // printf("req_pseudo\n");
     return req_pseudo;
   }else if (strncmp(rbuf,"req_pseudo",10) == 0 && global != 0){
-    printf("req: pseudo -- other\n");
+    //printf("req: pseudo -- other\n");
     global++;
     return req_other_pseudo;
   }else if(strncmp(rbuf,"req_connected",13) == 0){
-    printf("req_connected\n");
+    //printf("req_connected\n");
     return req_connected;
   }else if(strncmp(rbuf,"pseudo_enabled",14) == 0){
-    printf("pseudo_enabled\n");
+    //printf("pseudo_enabled\n");
     return pseudo_enabled;
   }else if(strncmp(rbuf,"start_game",10) == 0){
-    printf("start_game\n");
+    //printf("start_game\n");
     return start_game;
   }else if(strncmp(rbuf,"players_info=",13)==0){
     //printf("game info message:\n");
     return players_info;
   }else if(strncmp(rbuf,"player_disconnected=",20)==0){
-    printf("player disconnected\n"); 
+    //printf("player disconnected\n"); 
     return player_disconnected;
   }else if(strncmp(rbuf,"first_card=",11)==0){
-    printf("\n\n\n\nfirst card received\n\n\n\n");
+    //printf("\n\n\n\nfirst card received\n\n\n\n");
     return first_card;
   }else if(strncmp(rbuf,"second_card=",12)==0){
-    printf("\n\n\n\nsecond card received\n\n\n\n");
+    //printf("\n\n\n\nsecond card received\n\n\n\n");
     return second_card;
   }else if(strncmp(rbuf,"req_bet",7) == 0){
-    printf("request to bet\n");
+    //printf("request to bet\n");
     return req_bet;
   }else if(strncmp(rbuf,"spread_bet",10) == 0){
-    printf("bet from another player\n");
+    //printf("bet from another player\n");
     return spread_bet;
   }else if(strncmp(rbuf,"play_turn",9) == 0){
-    printf("choose actions to do this round\n");
+    //printf("choose actions to do this round\n");
     return play_turn;
   }else if(strncmp(rbuf,"update_stand",12) == 0){
-    printf("tell other players that a player stands\n");
+    //printf("\n\ntell other players that a player stands\n\n");
     return play_turn;
+  }else if(strncmp(rbuf,"asked_card",10) == 0){
+    //printf("\n\nhit action that gets a new card\n\n");
+    return asked_card;
+  }else if(strncmp(rbuf,"stand",5) == 0){
+    //printf("\n\nSTAND\n\n");
+    return stand_action;
+  }else if(strncmp(rbuf,"hit",3) == 0){
+    //printf("\n\nHIT\n\n");
+    return hit_action;
   }else return unknown;
   
 }
@@ -270,7 +279,7 @@ void print_game(game_instance* gi){
       memset(cd,0,10);
       sprintf(cd,"%s, ",c);
       strncpy(cards,cd,10);
-      for(int j = 1; j < gi->number_of_players; j++){
+      for(int j = 1; j < 10; j++){
 	if(gi->players_cards[i][j] != NULL){
 	  c = show_card(gi->players_cards[i][j]);
 	  memset(cd,0,10);

@@ -20,24 +20,24 @@ player* init_player(int socket_fd, pseudo_db* pb){
   //steps : check_existance - bind_pseudo - set pseudo to player
   char pseudo[20];
   memset(pseudo,0,20);
-  printf("before first ask for pseudo\n");
+  //printf("before first ask for pseudo\n");
   ask_for_pseudo(socket_fd,pseudo);
-  printf("pseudo is %s\n",pseudo);
+  //printf("pseudo is %s\n",pseudo);
   if(check_existance(pb,pseudo) == 0){
-    printf("checking existance for %s\n",pseudo);
+    //printf("checking existance for %s\n",pseudo);
     bind_pseudo(&pb,pseudo);
     send_pseudo_confirmation(socket_fd);
   }else{
-    printf("check_existance for %s returned 1\n",pseudo);
+    //printf("check_existance for %s returned 1\n",pseudo);
     while(check_existance(pb,pseudo) != 0){
-      printf("checking existance for %s in loop\n",pseudo);
+      //printf("checking existance for %s in loop\n",pseudo);
       memset(pseudo,0,20);
       ask_for_pseudo(socket_fd,pseudo);
     }
     bind_pseudo(&pb,pseudo);
     send_pseudo_confirmation(socket_fd);
   }
-  printf("now pseudo is %s\n",pseudo);
+  //printf("now pseudo is %s\n",pseudo);
   strncpy(p->pseudo,pseudo,20);
   p->card1 = NULL;
   p->card2 = NULL;
@@ -72,18 +72,18 @@ char* ask_for_pseudo(int socket_fd, char* pseudo){
    }
    num_buf[bytes-1] = '\0';
    int sz = atoi(num_buf);
-   printf("we read %d for pseudo\n",sz);
+   //  printf("we read %d for pseudo\n",sz);
    
-   printf("receving pseudo from client\n");
+   //printf("receving pseudo from client\n");
    if((numbytes = recv(socket_fd,readbuf,sz,0)) < 0){
      fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno));
      exit(1);
     
    }
-   printf("numbytes =  %d\n", numbytes);
+   //printf("numbytes =  %d\n", numbytes);
    readbuf[numbytes] = '\0';
    
-   printf("connected client has pseudo : %s \n",readbuf);
+   //printf("connected client has pseudo : %s \n",readbuf);
    strncpy(pseudo,readbuf,sz);
    return readbuf;
    
@@ -99,10 +99,10 @@ void send_pseudo_confirmation(int socket_fd){
 
 
 void send_players_info(blackjack_table* table, int socket_fd){
-  printf("inside send_player_info() \n");
+  //printf("inside send_player_info() \n");
 
   if(table->number_of_players == 0){
-    printf("no player at the table\n");
+    //printf("no player at the table\n");
     return;
   }
   
@@ -125,7 +125,7 @@ void send_players_info(blackjack_table* table, int socket_fd){
     strncat(message,str,40);
     //printf("ddd\n");
   }
-  printf("message = %s\n",message);
+  //printf("message = %s\n",message);
   int m = n+3;
   char final_message[m];
   memset(final_message,0,m);
@@ -138,7 +138,7 @@ void send_players_info(blackjack_table* table, int socket_fd){
   }
   strncpy(final_message,length, strlen(length));
   strncat(final_message, message, strlen(message));
-  printf("final message = %s\n",final_message);
+  //printf("final message = %s\n",final_message);
 
   if(send(socket_fd,final_message,strlen(final_message),0) == -1){
     fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
@@ -280,7 +280,7 @@ void send_first_card(blackjack_table* table,card_package_t* pack){
   int length = 13+strlen(str)+strlen("dealer");
   sprintf(msg,"%d:first_card=%s(dealer)",length,str);
   for(int j = 0; j< table->number_of_players; j++){
-    printf("sending msg:%s to client %d\n",msg,j);
+    //printf("sending msg:%s to client %d\n",msg,j);
     if(send(table->players[j]->socket_fd,msg,strlen(msg),0) == -1){
       fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
       return;
@@ -290,12 +290,12 @@ void send_first_card(blackjack_table* table,card_package_t* pack){
   
   //reset the counter to zero
   table->count_views == 0;
-  printf("END sending first card\n");
+  //printf("END sending first card\n");
 }
 
 void send_second_card(blackjack_table* table,card_package_t* pack){
-  printf("inside send_second_card()\n");
-  printf("views= %d; players = %d\n",table->count_views,table->number_of_players);
+  //printf("inside send_second_card()\n");
+  //printf("views= %d; players = %d\n",table->count_views,table->number_of_players);
   while(table->count_views != table->number_of_players){
     //printf("waiting that all threads are ready to send the card\n");
   }
@@ -307,7 +307,7 @@ void send_second_card(blackjack_table* table,card_package_t* pack){
     int length = 14+strlen(str)+strlen(table->players[i]->pseudo);
     sprintf(msg,"%d:second_card=%s(%s)",length,str,table->players[i]->pseudo);
     for(int j = 0; j< table->number_of_players; j++){
-      printf("sending message %s to client %d\n",msg,j);
+      //printf("sending message %s to client %d\n",msg,j);
       if(send(table->players[j]->socket_fd,msg,strlen(msg),0) == -1){
 	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
 	return;
@@ -317,7 +317,7 @@ void send_second_card(blackjack_table* table,card_package_t* pack){
   //send infos about the dealer to clients, this card is hidden
   card_t* c = get_card(pack);
   hide_card(c);
-  printf("SECOND DEALER CARD hidden = %d\n",c->hidden);
+  //printf("SECOND DEALER CARD hidden = %d\n",c->hidden);
   char* str = card_to_string(c);
   
   char msg[30];
@@ -334,7 +334,7 @@ void send_second_card(blackjack_table* table,card_package_t* pack){
   
   //reset the counter to zero
   table->count_views == 0;
-  printf("END sending second card\n");
+  //printf("END sending second card\n");
 }
 
 /*

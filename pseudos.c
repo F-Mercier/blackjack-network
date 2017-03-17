@@ -15,7 +15,7 @@ pseudo_db* init_pseudo_db(int size){
 }
 
 void bind_pseudo(pseudo_db** pb, char* pseudo){
-  printf("binding pseudo %s\n",pseudo);
+  //printf("binding pseudo %s\n",pseudo);
   if((*pb)->elements == (*pb)->size){
     resize_htable(pb);
   }
@@ -79,7 +79,7 @@ void resize_htable(pseudo_db** pb){
 }
 
 int check_existance(pseudo_db* pb, char* pseudo){
-  printf("checking existance for %s\n",pseudo);
+  //printf("checking existance for %s\n",pseudo);
   unsigned long h = hash(pseudo) % pb->size;
   list tmp = (pb->htable[h]).pseudos_list;
   int found = 0;

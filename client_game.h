@@ -17,6 +17,9 @@ typedef enum{
   spread_bet,
   play_turn,
   update_stand,
+  asked_card,
+  hit_action,
+  stand_action,
   unknown
 } message;
 

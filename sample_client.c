@@ -89,7 +89,7 @@ int main(int argc, char** argv){
     hpackage->cards[i].hidden = 1;
   }
 
-  printf("game initialized\n");
+  //printf("game initialized\n");
 
   char msg[2*MAXDATASIZE];
   memset(msg,0,2*MAXDATASIZE);
@@ -116,7 +116,7 @@ int main(int argc, char** argv){
       }
     }
     if(m == first_card || m == second_card){
-      printf("\n\nRECEIVE FIRST CARD.....OR SECOND CARD.....\n\n");
+      //printf("\n\nRECEIVE FIRST CARD.....OR SECOND CARD.....\n\n");
       char card[10];
       memset(card,0,10);
       int i;
@@ -179,7 +179,7 @@ int main(int argc, char** argv){
       char message[30];
       memset(message,0,30);
       sprintf(message,"send_bet:%d",b);
-      printf(" bet message = %s",message);
+      //printf(" bet message = %s",message);
       if(send(sockfd,message,strlen(message),0) == -1){
 	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
 	return;
@@ -194,7 +194,7 @@ int main(int argc, char** argv){
     }
 
     if(m == spread_bet){
-      printf("registering the bet from another player\n");
+      //printf("registering the bet from another player\n");
       char pseudo[20];
       char bet[10];
       memset(bet,0,10);
@@ -216,7 +216,7 @@ int main(int argc, char** argv){
       }
       bet[l] = '\0';
       int b = atoi(bet);
-      printf("player %s has bet %d\n",pseudo,b);
+      //printf("player %s has bet %d\n",pseudo,b);
       //registering the bet
       for(int j = 0; j<game->number_of_players; j++){
 	if(strcmp(game->players_pseudos[j],pseudo) == 0){
@@ -249,17 +249,87 @@ int main(int argc, char** argv){
 
     if(m == update_stand){
       //do stuff to update client game
+      char pseudo[20];
+      memset(pseudo,0,20);
+      int i = 13;
+      int k = 0;
+      while(msg[i] != ')'){
+	pseudo[k] = msg[i];
+	k++;
+	i++;
+      }
+      pseudo[k]='\0';
+      for(int i = 0; i < game->number_of_players; i++){
+	if(strcmp(pseudo,game->players_pseudos[i]) == 0){
+	  game->players_actions[i] = STAND;
+	}
+      }
     }
+
+    
+    if(m == asked_card){
+      //update client game
+      //printf("inside hit_action\n");
+      char pseudo[20];
+      char card[20];
+      memset(pseudo,0,20);
+      memset(card,0,20);
+      int i = 11;
+      int k = 0;
+      int l = 0;
+      while(msg[i] != '('){
+	card[k] = msg[i];
+	k++;
+	i++;
+      }
+      card[k]='\0';
+      i++;
+      while(msg[i] != ')'){
+	pseudo[l] = msg[i];
+	l++;
+	i++;
+      }
+      pseudo[l] = '\0';
+
+      printf("\n\npseudo = %s\n\n",pseudo);
+      printf("\n\ncard = %s\n\n",card);
+      card_t crd = string_to_card(card);
+
+      for(int o = 0; o < 52; o++){
+	if(strcmp(crd.symbol,package->cards[o].symbol)==0 &&
+	   strcmp(crd.color,package->cards[o].color)==0){
+	  for(int i = 0; i<20; i++){
+	    if(game->players_cards[game->my_tour_number][i] == NULL){
+	      game->players_cards[game->my_tour_number][i] = &package->cards[o];
+	      break;
+	    }
+	  }
+	}
+      }
+
+      for(int p=0; p < 10; p++){
+	printf("%s, ", card_to_string(game->players_cards[game->my_tour_number][p]));
+      }
+    }
+
+    /* if(m == hit_action){ */
+    /*   printf("inside HIT code\n"); */
+    /* } */
+
+    /* if(m == stand_action){ */
+      
+    /* } */
+  
     
     
     if(m == req_connected){
       send_keep_connection(sockfd);
     }
 
-    printf("before printing the game\n\n");
+    //printf("before printing the game\n\n");
     print_game(game);
     memset(msg,0,2*MAXDATASIZE);
-    
+    //system("clear");
   }
 
   return 0;

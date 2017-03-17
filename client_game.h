@@ -15,6 +15,8 @@ typedef enum{
   second_card,
   req_bet,
   spread_bet,
+  play_turn,
+  update_stand,
   unknown
 } message;
 

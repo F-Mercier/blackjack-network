@@ -141,6 +141,8 @@ void* run_thread(void* args){
       switch(tm->tables[table_no]->info_changed){
       case CARD1: printf("CARD1 STATE\n");break;
       case CARD2: printf("CARD2 STATE\n");break;
+      case BET: printf("BET STATE\n");break;
+      case ACTION: printf("ACTION STATE\n");break;
       case NO_INFO: printf("NO_INFO_STATE\n");break;
       default:break;
       }
@@ -210,6 +212,64 @@ void* run_thread(void* args){
 
 	tm->tables[table_no]->tour++;
       }
+
+
+      if(tm->tables[table_no]->info_changed == ACTION && tm->tables[table_no]->tour == place){
+
+	char* play_msg = "09:play_turn";
+	if(send(p->socket_fd,play_msg,strlen(play_msg),0) == -1){
+	  fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	  return;
+	}
+
+	int numbytes; 
+	char readbuf[20];
+	memset(readbuf,0,20);
+	if((numbytes = recv(p->socket_fd,readbuf,sizeof(readbuf),0)) < 0){
+	  fprintf(stderr,"recv : error while reading from the client : %s\n",strerror(errno));
+	  exit(1);
+	}
+	
+	printf("numbytes =  %d\n", numbytes);
+	readbuf[numbytes] = '\0';
+	printf("received msg: %s\n",readbuf);
+
+	if(strncmp(readbuf,"stand",5) == 0){
+	  char update_msg[60];
+	  memset(update_msg,0,60);
+	  int len = 14 + strlen(p->pseudo);
+	  sprintf(update_msg,"%d:update_stand(%s)",len,p->pseudo);
+	  for(int i = 0; i< tm->tables[table_no]->number_of_players; i++){
+	    if(p->socket_fd != tm->tables[table_no]->players[i]->socket_fd){
+	      printf("giving chosen bet to %s\n",tm->tables[table_no]->players[i]->pseudo);
+	      if(send(tm->tables[table_no]->players[i]->socket_fd,update_msg,strlen(update_msg),0) == -1){
+		fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+		return;
+	      }
+	    }
+	  }
+
+	  tm->tables[table_no]->tour++;
+	  
+	}else if(strncmp(readbuf,"hit",3)==0){
+	  card_package_t* cp = init_card_package();
+	  shuffle_cards(cp);
+	  shuffle_cards(cp);
+	  card_t* c = get_card(cp);
+	  char* str = card_to_string(c);
+	  char msg[30];
+	  memset(msg,0,30);
+	  int length = 13+strlen(str)+strlen(p->pseudo);
+	  sprintf(msg,"%d:asked_card=%s(%s)",length,str,p->pseudo);
+	  for(int j = 0; j< tm->tables[table_no]->number_of_players; j++){
+	    printf("sending message %s to client %d\n",msg,j);
+	    if(send(p->socket_fd,msg,strlen(msg),0) == -1){
+	      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	      return;
+	    }
+	  }
+	}
+      }	
     }
 	
 

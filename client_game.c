@@ -177,6 +177,12 @@ message get_message(int socket_fd,char* message, int size){
   }else if(strncmp(rbuf,"spread_bet",10) == 0){
     printf("bet from another player\n");
     return spread_bet;
+  }else if(strncmp(rbuf,"play_turn",9) == 0){
+    printf("choose actions to do this round\n");
+    return play_turn;
+  }else if(strncmp(rbuf,"update_stand",12) == 0){
+    printf("tell other players that a player stands\n");
+    return play_turn;
   }else return unknown;
   
 }

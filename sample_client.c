@@ -225,6 +225,32 @@ int main(int argc, char** argv){
 	}
       }
     }
+
+    if(m == play_turn){
+
+      char act[6];
+      memset(act,0,6);
+      printf("What action do you choose? hit or stand ? : ");
+      fgets(act,6,stdin);
+      while(strncmp(act,"hit",3) != 0 && strncmp(act,"stand",5)!=0){
+	printf("wrong choice! Try again hit or stand ? : ");
+	memset(act,0,6);
+	fgets(act,6,stdin);
+	printf("%s\n",act);
+      }
+
+      if(send(sockfd,act,strlen(act),0) == -1){
+	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	return;
+      }
+
+
+    }
+
+    if(m == update_stand){
+      //do stuff to update client game
+    }
+    
     
     if(m == req_connected){
       send_keep_connection(sockfd);

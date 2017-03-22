@@ -282,8 +282,9 @@ void send_first_card(blackjack_table* table,card_package_t* pack){
 	return;
       }
     }
-    table->players[i]->cards[table->players[i]->card_ind] = c;
     table->players[i]->card_ind++;
+    table->players[i]->cards[table->players[i]->card_ind] = c;
+    
     
       
       
@@ -331,8 +332,9 @@ void send_second_card(blackjack_table* table,card_package_t* pack){
 	return;
       }
     }
-    table->players[i]->cards[table->players[i]->card_ind] = c;
     table->players[i]->card_ind++;
+    table->players[i]->cards[table->players[i]->card_ind] = c;
+    
   }
   //send infos about the dealer to clients, this card is hidden
   card_t* c = get_card(pack);

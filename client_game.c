@@ -250,6 +250,7 @@ void send_keep_connection(int socket_fd){
 }
 
 
+
 void print_game(game_instance* gi){
   printf("you are %s \n",gi->my_pseudo);
   for(int i = 0; i<gi->number_of_players; i++){
@@ -321,6 +322,7 @@ void add_card_to_hand(game_instance* gi, card_t* card, char* pseudo){
     for(int j = 0; j < 20; j++){
       if(gi->players_cards[index][j] == NULL){
 	gi->players_cards[index][j] = card;
+	//gi->cards_sum[index] += card->value;
 	break;
       }
     }

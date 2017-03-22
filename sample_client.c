@@ -330,6 +330,7 @@ int main(int argc, char** argv){
 	  for(int i = 0; i<20; i++){
 	    if(game->players_cards[ind][i] == NULL){
 	      game->players_cards[ind][i] = &package->cards[o];
+	      //game->cards_sum[ind] += package->cards[o].value;
 	      game->players_actions[ind] = HIT;
 	      break;
 	    }
@@ -350,7 +351,17 @@ int main(int argc, char** argv){
       
     /* } */
   
-    
+    //update the sum
+    int index = 0;
+    game->cards_sum[game->my_tour_number] = 0;
+    while(game->players_cards[game->my_tour_number][index] != NULL){
+      if(strcmp(game->players_cards[game->my_tour_number][index]->symbol,"A") == 0 && game->cards_sum[game->my_tour_number] <= 10){
+	game->cards_sum[game->my_tour_number] += 1;
+      }else{
+	game->cards_sum[game->my_tour_number] += game->players_cards[game->my_tour_number][index]->value;
+      }
+      index++;
+    }
     
     if(m == req_connected){
       send_keep_connection(sockfd);

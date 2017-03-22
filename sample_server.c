@@ -304,25 +304,38 @@ void* run_thread(void* args){
 	    }
 	    printf("SENT %d data\n",rv);  
 	  }
-	  p->cards[p->card_ind] = c;
 	  p->card_ind++;
+	  p->cards[p->card_ind] = c;
+	  
 	}
       }
     }
 
     //compute cards sum
 
+    printf("cards : \n {");
+    int i = 0;
+    while(p->cards[i] != NULL){
+      char* str = card_to_string(p->cards[i]);
+      printf(" %s ;",str);
+      i++;
+    }
+    printf(" }\n");
+    
     int index = 0;
+    p->card_sum = 0;
     while(p->cards[index] != NULL){
       printf("counting cards\n");
       if(strcmp(p->cards[index]->symbol,"A") == 0 && p->card_sum <=10){
 	p->card_sum += 11;
       }else{
 	p->card_sum += p->cards[index]->value;
+	printf("card_value = %d ,index = %d\n",p->cards[index]->value,index);
       }
       index++;
     }
-	
+
+    printf("CARDS SUM = %d FOR PLAYER %s\n",p->card_sum, p->pseudo);
 
     
     pthread_mutex_lock(&mutex);

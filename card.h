@@ -13,7 +13,7 @@ typedef struct card_package_s{
   int counter;//how many cards are still in the package
 }card_package_t;
 
-typedef enum{HIT, STAND, NO_ACTION} action;
+typedef enum{HIT, STAND,  NO_ACTION} action;
 
 card_t init_card(char* symbol, char* color, int value, int hidden);
 

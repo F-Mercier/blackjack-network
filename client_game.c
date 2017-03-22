@@ -182,7 +182,7 @@ message get_message(int socket_fd,char* message, int size){
     return play_turn;
   }else if(strncmp(rbuf,"update_stand",12) == 0){
     //printf("\n\ntell other players that a player stands\n\n");
-    return play_turn;
+    return update_stand;
   }else if(strncmp(rbuf,"asked_card",10) == 0){
     //printf("\n\nhit action that gets a new card\n\n");
     return asked_card;

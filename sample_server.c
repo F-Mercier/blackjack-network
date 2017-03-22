@@ -34,20 +34,20 @@ typedef struct data_s data;
 void* run_game(void* arg){
   printf("INSIDE DEALER THREAD\n\n");
   blackjack_table* table = (blackjack_table*)arg;
-  card_package_t* pack = init_card_package();
-  printf("card pack created\n");
-  printf("test: card[2].sym: %s, card[2].color: %s\n",pack->cards[2].symbol, pack->cards[2].color);
-  shuffle_cards(pack);
-  print_card_package(pack);
-  printf("test shuffle: card[2].sym: %s, card[2].color: %s\n",pack->cards[2].symbol, pack->cards[2].color);
+  //card_package_t* pack = init_card_package();
+  //printf("card pack created\n");
+  //printf("test: card[2].sym: %s, card[2].color: %s\n",pack->cards[2].symbol, pack->cards[2].color);
+  //shuffle_cards(pack);
+  //print_card_package(pack);
+  //printf("test shuffle: card[2].sym: %s, card[2].color: %s\n",pack->cards[2].symbol, pack->cards[2].color);
   table->info_changed = CARD1;
   printf("\n\nSENDING FIRST CARDS\n\n");
   printf("number of views(should be 0):%d\n",table->count_views);
-  send_first_card(table,pack);
+  send_first_card(table,table->card_package);
   printf("END send first card\n");
 
   table->info_changed = CARD2;
-  send_second_card(table,pack);
+  send_second_card(table,table->card_package);
   printf("\n\nFINISH SENDING SECOND CARD\n\n");
   table->info_changed = BET;
   while(table->tour != table->number_of_players){
@@ -110,11 +110,12 @@ void* run_thread(void* args){
   pthread_mutex_unlock(&mutex);
   print_pseudos(pb);
 
-  int place;
+  //int place;
   //find my place at the table
   for(int i = 0; i < tm->tables[table_no]->size; i++){
     if(strcmp(tm->tables[table_no]->players[i]->pseudo,p->pseudo)==0){
-      place = i;
+      //place = i;
+      tm->tables[table_no]->players[i]->my_place = i;//????
       break;
     }
   }
@@ -123,8 +124,9 @@ void* run_thread(void* args){
   int is_running = 0;
   int reg = 0;
   int reg1 = 0;
-  card_package_t* cp = init_card_package();
-  shuffle_cards(cp);
+  //card_package_t* cp = init_card_package();
+  //shuffle_cards(cp);
+
   
   while(1){
     //check if full is 1 to tell client game started
@@ -167,7 +169,7 @@ void* run_thread(void* args){
 
 
       
-      if(tm->tables[table_no]->info_changed == BET && tm->tables[table_no]->tour == place){
+      if(tm->tables[table_no]->info_changed == BET && tm->tables[table_no]->tour == p->my_place ){
 
 	char msg[30];
 	memset(msg,0, 30);
@@ -205,6 +207,8 @@ void* run_thread(void* args){
 
 	int bet_val = atoi(bet);
 	printf("the bet is %d\n",bet_val);
+	p->bet = bet_val;
+	p->money -= bet_val;
 
 	
 	
@@ -238,7 +242,7 @@ void* run_thread(void* args){
 
 
       
-      if(tm->tables[table_no]->info_changed == ACTION && tm->tables[table_no]->tour == place){
+      if(tm->tables[table_no]->info_changed == ACTION && tm->tables[table_no]->tour == p->my_place){
 
 	char* play_msg = "09:play_turn";
 	if(send(p->socket_fd,play_msg,strlen(play_msg),0) == -1){
@@ -280,11 +284,12 @@ void* run_thread(void* args){
 	      return;
 	    }
 	    
-	    tm->tables[table_no]->tour++;
 	  }
+	  printf("CHANGING TOUR\n");
+	  tm->tables[table_no]->tour++;
 	  
 	}else if(strncmp(readbuf,"hit",3)==0){
-	  card_t* c = get_card(cp);
+	  card_t* c = get_card(tm->tables[table_no]->card_package);
 	  char* str = card_to_string(c);
 	  char msg[30];
 	  memset(msg,0,30);
@@ -299,8 +304,23 @@ void* run_thread(void* args){
 	    }
 	    printf("SENT %d data\n",rv);  
 	  }
+	  p->cards[p->card_ind] = c;
+	  p->card_ind++;
 	}
       }
+    }
+
+    //compute cards sum
+
+    int index = 0;
+    while(p->cards[index] != NULL){
+      printf("counting cards\n");
+      if(strcmp(p->cards[index]->symbol,"A") == 0 && p->card_sum <=10){
+	p->card_sum += 11;
+      }else{
+	p->card_sum += p->cards[index]->value;
+      }
+      index++;
     }
 	
 
@@ -308,6 +328,9 @@ void* run_thread(void* args){
     pthread_mutex_lock(&mutex);
     if(check_connectivity(p,60) == 0){
       send_disconnected_to_all(tm->tables[table_no],p);//to implement
+      for(int i = p->my_place; i < tm->tables[table_no]->number_of_players; i++){
+	tm->tables[table_no]->players[i]->my_place--;
+      }
       remove_player(tm,table_no,p,pb);
     }
     pthread_mutex_unlock(&mutex);
@@ -327,6 +350,9 @@ int main(int argc, char** argv){
   int yes = 1;
   char ip[INET6_ADDRSTRLEN];
   int status;
+
+  // card_package_t* card_package = init_card_package();
+  //cp = *card_package;
 
   pthread_t thread, thread1;
   pthread_attr_t att;

@@ -111,6 +111,9 @@ int main(int argc, char** argv){
       for(int i = 0; i< game->number_of_players; i++){
 	if(strncmp(game->players_pseudos[i],ppseudo,strlen(ppseudo))==0){
 	  game->players_connected[i] = 0;
+	  if(i < game->my_tour_number){
+	    game->my_tour_number--;
+	  }
 	  break;
 	}
       }
@@ -166,6 +169,14 @@ int main(int argc, char** argv){
       }
     }
 
+
+
+
+
+
+
+    
+
     if(m == req_bet){
       printf("enter the amount of money you want to bet : ");
       int b;
@@ -188,6 +199,8 @@ int main(int argc, char** argv){
       for(int j = 0; j<game->number_of_players; j++){
 	if(strcmp(game->players_pseudos[j],game->my_pseudo) == 0){
 	  game->players_bets[j] = b;
+	  game->players_money[j] -= b;
+	  //game->players_actions[j] = BET;
 	  break;
 	}
       }
@@ -221,6 +234,8 @@ int main(int argc, char** argv){
       for(int j = 0; j<game->number_of_players; j++){
 	if(strcmp(game->players_pseudos[j],pseudo) == 0){
 	  game->players_bets[j] = b;
+	  game->players_money[j] -= b;
+	  //game->players_actions[j] = BET;
 	  break;
 	}
       }
@@ -315,6 +330,7 @@ int main(int argc, char** argv){
 	  for(int i = 0; i<20; i++){
 	    if(game->players_cards[ind][i] == NULL){
 	      game->players_cards[ind][i] = &package->cards[o];
+	      game->players_actions[ind] = HIT;
 	      break;
 	    }
 	  }

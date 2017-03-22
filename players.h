@@ -22,12 +22,15 @@ typedef struct player{
   int socket_fd; //socket descriptor associated with this client
   char pseudo[20]; // unique identifiant for the player along socket descriptor
   int connected; // boolean: 1 - player is connected ; 0 - not connected
-  card_t* card1;
-  card_t* card2;
+  //card_t* card1;
+  //card_t* card2;
+  card_t* cards[20];
+  int card_ind;
   int money;
   int bet;
   action act;
   int card_sum;
+  int my_place;
   //int countdown;//init with the number of threads that will read this variable
 }player;
 
@@ -43,6 +46,7 @@ typedef struct blackjack_table{
   int count_views;// how many threads have got the information; it is reset by the game thread once count_views==size
   info_t info_changed;
   int tour;
+  card_package_t* card_package;
 }blackjack_table;
 
 /*

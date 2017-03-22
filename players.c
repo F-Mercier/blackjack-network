@@ -39,12 +39,16 @@ player* init_player(int socket_fd, pseudo_db* pb){
   }
   //printf("now pseudo is %s\n",pseudo);
   strncpy(p->pseudo,pseudo,20);
-  p->card1 = NULL;
-  p->card2 = NULL;
+  //p->card1 = NULL;
+  //p->card2 = NULL;
   p->money = 500;
   p->bet = 0;
   p->act = NO_ACTION;
   p->card_sum = 0;
+  p->card_ind = -1;
+  for(int i = 0; i< 20; i++){
+    p->cards[i] = NULL;
+  }
   
   return p;
 }
@@ -170,6 +174,8 @@ blackjack_table* init_blackjack_table(int size){
   pt->count_views = 0;
   pt->info_changed = NO_INFO;
   pt->tour = 0;
+  pt->card_package = init_card_package();
+  shuffle_cards(pt->card_package);
   return pt;
 }
 
@@ -201,6 +207,7 @@ int remove_player_from_table(blackjack_table* pt, player* p, pseudo_db* pb){
   int found = 0;
   for(int i=0; i<pt->size; i++){
     if(p == pt->players[i]){
+      printf("REMOVING_PLAYER %s from table\n",p->pseudo);
       //close the socket descriptor, unbind pseudo and free the player structure
       close(pt->players[i]->socket_fd);
       unbind_pseudo(&pb,pt->players[i]->pseudo);
@@ -219,7 +226,13 @@ int remove_player_from_table(blackjack_table* pt, player* p, pseudo_db* pb){
       break;
     }
   }
-  if(found == 1) return 1;
+  if(found == 1){
+    //send a message with the new tour to each player
+    /* for(int i = 0; i< pt->number_of_players; i++){ */
+    /*   send_players_info(pt,pt->players[i]->socket_fd); */
+    /* } */
+    return 1;
+  }
   else return -1;
 }
 
@@ -269,6 +282,11 @@ void send_first_card(blackjack_table* table,card_package_t* pack){
 	return;
       }
     }
+    table->players[i]->cards[table->players[i]->card_ind] = c;
+    table->players[i]->card_ind++;
+    
+      
+      
   }
   //send to clients the informations about the dealer
 
@@ -313,6 +331,8 @@ void send_second_card(blackjack_table* table,card_package_t* pack){
 	return;
       }
     }
+    table->players[i]->cards[table->players[i]->card_ind] = c;
+    table->players[i]->card_ind++;
   }
   //send infos about the dealer to clients, this card is hidden
   card_t* c = get_card(pack);

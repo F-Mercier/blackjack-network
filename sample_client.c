@@ -241,29 +241,58 @@ int main(int argc, char** argv){
       }
     }
 
+
+
+    
+
     if(m == play_turn){
+      //updating the current player's status
 
-      char* str;
-      char act[6];
-      memset(act,0,6);
-      printf("What action do you choose? hit or stand ? : ");
-      scanf("%s",act);
-      while(strstr(act,"hit") != NULL && strstr(act,"stand")!=NULL){
-	printf("wrong choice! Try again hit or stand ? : ");
+      char pseudo[20];
+      memset(pseudo,0,20);
+      int i = 10;
+      int k = 0;
+      while(msg[i] != ')'){
+	pseudo[k] = msg[i];
+	k++;
+	i++;
+      }
+      pseudo[k]='\0';
+
+      if(strcmp(game->my_pseudo,pseudo) == 0){
+	for(int j = 0; j < game->number_of_players; j++){
+	  if(strcmp(game->players_pseudos[j],pseudo) == 0){
+	    game->is_playing[j] = 1;
+	  }else{
+	    game->is_playing[j] = 0;
+	  }
+	}
+	char* str;
+	char act[6];
 	memset(act,0,6);
-	fgets(act,6,stdin);
-	printf("%s\n",act);
+	printf("What action do you choose? hit or stand ? : ");
+	scanf("%s",act);
+	while(strstr(act,"hit") != NULL && strstr(act,"stand")!=NULL){
+	  printf("wrong choice! Try again hit or stand ? : ");
+	  memset(act,0,6);
+	  fgets(act,6,stdin);
+	  printf("%s\n",act);
+	}
+	
+	if(send(sockfd,act,strlen(act),0) == -1){
+	  fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	  return;
+	}
+	
+      }else{
+	for(int j = 0; j < game->number_of_players; j++){
+	  if(strcmp(game->players_pseudos[j],pseudo) == 0){
+	    game->is_playing[j] = 1;
+	  }else{
+	    game->is_playing[j] = 0;
+	  }
+	}
       }
-      /* if(strstr(act,"hit")!=NULL){ */
-      /* 	str = "hit"; */
-      /* } */
-
-      if(send(sockfd,act,strlen(act),0) == -1){
-	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
-	return;
-      }
-
-
     }
 
     if(m == update_stand){

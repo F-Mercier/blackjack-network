@@ -128,7 +128,7 @@ void* run_thread(void* args){
   //shuffle_cards(cp);
 
   
-  while(1){
+  while(p != NULL){
     //check if full is 1 to tell client game started
     //printf(".....inside while loop\n");
     if(tm->tables[table_no]->full == 1 && is_running == 0 ){
@@ -244,12 +244,18 @@ void* run_thread(void* args){
       
       if(tm->tables[table_no]->info_changed == ACTION && tm->tables[table_no]->tour == p->my_place){
 
-	char* play_msg = "09:play_turn";
-	if(send(p->socket_fd,play_msg,strlen(play_msg),0) == -1){
-	  fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
-	  return;
+	char play_msg[40];
+	memset(play_msg,0,40);
+	int len = 11 + strlen(p->pseudo);
+	sprintf(play_msg,"%d:play_turn(%s)",len,p->pseudo);
+	//send this message to everyone
+	for(int i = 0; i < tm->tables[table_no]->number_of_players; i++){ 
+	  if(send(tm->tables[table_no]->players[i]->socket_fd, play_msg,strlen(play_msg),0) == -1){
+	    fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	    return;
+	  }
 	}
-
+	//wait only for this player's response
 	int numbytes; 
 	char readbuf[20];
 	memset(readbuf,0,20);
@@ -315,6 +321,7 @@ void* run_thread(void* args){
 
     printf("cards : \n {");
     int i = 0;
+    if(p == NULL) printf("NULL PLAYER\n");
     while(p->cards[i] != NULL){
       char* str = card_to_string(p->cards[i]);
       printf(" %s ;",str);
@@ -345,6 +352,7 @@ void* run_thread(void* args){
 	tm->tables[table_no]->players[i]->my_place--;
       }
       remove_player(tm,table_no,p,pb);
+      p=NULL;
     }
     pthread_mutex_unlock(&mutex);
     //print_blackjack_tables(tm);

@@ -47,6 +47,7 @@ typedef struct blackjack_table{
   info_t info_changed;
   int tour;
   card_package_t* card_package;
+  card_t* dealer_cards[20]; 
 }blackjack_table;
 
 /*

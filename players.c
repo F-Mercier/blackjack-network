@@ -176,6 +176,9 @@ blackjack_table* init_blackjack_table(int size){
   pt->tour = 0;
   pt->card_package = init_card_package();
   shuffle_cards(pt->card_package);
+  for(int i = 0; i<20; i++){
+    pt->dealer_cards[i] = NULL;
+  }
   return pt;
 }
 
@@ -305,6 +308,7 @@ void send_first_card(blackjack_table* table,card_package_t* pack){
       return;
     }
   }
+  table->dealer_cards[0] = c;
   
   
   //reset the counter to zero
@@ -353,7 +357,7 @@ void send_second_card(blackjack_table* table,card_package_t* pack){
       return;
     }
   }
-  
+  table->dealer_cards[1] = c;
   //reset the counter to zero
   table->count_views == 0;
   //printf("END sending second card\n");

@@ -352,17 +352,21 @@ int main(int argc, char** argv){
     /* } */
   
     //update the sum
-    int index = 0;
-    game->cards_sum[game->my_tour_number] = 0;
-    while(game->players_cards[game->my_tour_number][index] != NULL){
-      if(strcmp(game->players_cards[game->my_tour_number][index]->symbol,"A") == 0 && game->cards_sum[game->my_tour_number] <= 10){
-	game->cards_sum[game->my_tour_number] += 1;
-      }else{
-	game->cards_sum[game->my_tour_number] += game->players_cards[game->my_tour_number][index]->value;
+    for(int i = 0; i< game->number_of_players; i++){
+      
+      int index = 0;
+      game->cards_sum[i] = 0;
+      while(game->players_cards[i][index] != NULL){
+	if(game->players_cards[i][index]->hidden != 1){
+	  if(strcmp(game->players_cards[i][index]->symbol,"A") == 0 && game->cards_sum[i] <= 10){
+	    game->cards_sum[i] += 1;
+	  }else{
+	    game->cards_sum[i] += game->players_cards[i][index]->value;
+	  }
+	}
+	index++;
       }
-      index++;
     }
-    
     if(m == req_connected){
       send_keep_connection(sockfd);
     }

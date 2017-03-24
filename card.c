@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 
 card_t init_card(char* symbol, char* color, int value, int hidden){
@@ -33,6 +34,7 @@ card_package_t* init_card_package(){
 }
 
 void shuffle_cards(card_package_t* cp){
+  srand(time(NULL));
   for(int i = 0; i < 51; i++){
     int j = rand()%(i+1);
     if(j != i){
@@ -83,7 +85,9 @@ char* card_to_string(card_t* card){
 }
 
 char* show_card(card_t* card){
-  if(card == NULL) return "empty";
+  if(card == NULL){
+    return "empty";
+  }
   if(card->hidden == 1){
     return "???";
   }else{

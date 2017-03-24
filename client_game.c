@@ -192,6 +192,9 @@ message get_message(int socket_fd,char* message, int size){
   }else if(strncmp(rbuf,"hit",3) == 0){
     //printf("\n\nHIT\n\n");
     return hit_action;
+  }else if(strncmp(rbuf,"end_game",8) == 0){
+    //printf("\n\nSTAND\n\n");
+    return end_game;
   }else return unknown;
   
 }

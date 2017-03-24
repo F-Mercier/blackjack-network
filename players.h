@@ -11,6 +11,8 @@ typedef enum{
   ACTION,
   BET,
   MONEY,
+  DEALER_TOUR,
+  RESULTS,
   NO_INFO,
 }info_t;
 

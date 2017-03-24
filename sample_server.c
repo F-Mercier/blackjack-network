@@ -55,7 +55,70 @@ void* run_game(void* arg){
   }
   table->info_changed = ACTION;
   table->tour = 0;
+  while(table->tour != table->number_of_players){
+
+  }
+  table->info_changed = DEALER_TOUR;
+  char* msg = "17:play_turn(dealer)";
+  for(int i = 0; i<table->number_of_players; i++){
+    if(send(table->players[i]->socket_fd, msg, strlen(msg), 0) == -1){
+      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+      return;
+    }
+  }
+  //dealer does a series of hit
+  printf("\n\n\t DEALER'S TIME\n\n");
+  int dealer_sum = 0;
+  int k = 0;
+  while(table->dealer_cards[k] != NULL){
+    dealer_sum += table->dealer_cards[k]->value;
+    k++;
+  }
+  printf("dealer sum = %d\n",dealer_sum);
+  while(dealer_sum <= 15){
+    card_t* c = get_card(table->card_package);
+    for(int i = 0; i<20; i++){
+      if(table->dealer_cards[i] == NULL){
+	table->dealer_cards[i] = c;
+	break;
+      }
+    }
+    
+    char* str = card_to_string(c);
+    char msg[50];
+    memset(msg,0,50);
+    int length = 13+strlen(str)+strlen("dealer");
+    sprintf(msg,"%d:asked_card=%s(dealer)",length,str);
+    
+    for(int i = 0; i<table->number_of_players; i++){
+      printf("SENDING DEALER CARD CHOSEN\n");
+      if(send(table->players[i]->socket_fd, msg, strlen(msg), 0) == -1){
+	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	return;
+      }
+    }
+    k = 0;
+    dealer_sum = 0;
+    while(table->dealer_cards[k] != NULL){
+      dealer_sum += table->dealer_cards[k]->value;
+      k++;
+    }
+    printf("dealer sum = %d\n",dealer_sum);
+    
+  }
+  table->tour = 0;
+  printf("\n\n\t PRINTING END GAME\n\n");
+  //ending game
+  char* end_msg = "08:end_game";
+  for(int i = 0; i<table->number_of_players; i++){
+    if(send(table->players[i]->socket_fd, end_msg, strlen(end_msg), 0) == -1){
+      fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+      return;
+    }
+  }
+  
   printf("TEMPORARY AT THE END\n");
+  pthread_exit(NULL);
 }
 
 
@@ -128,7 +191,7 @@ void* run_thread(void* args){
   //shuffle_cards(cp);
 
   
-  while(p != NULL){
+  while(p!=NULL){
     //check if full is 1 to tell client game started
     //printf(".....inside while loop\n");
     if(tm->tables[table_no]->full == 1 && is_running == 0 ){
@@ -171,14 +234,16 @@ void* run_thread(void* args){
       
       if(tm->tables[table_no]->info_changed == BET && tm->tables[table_no]->tour == p->my_place ){
 
-	char msg[30];
-	memset(msg,0, 30);
-	int length = 9;
-	sprintf(msg,"0%d:req_bet",length);
+	char msg[40];
+	memset(msg,0, 40);
+	int length = 9 + strlen(p->pseudo);
+	sprintf(msg,"%d:req_bet(%s)",length,p->pseudo);
 	printf("asking player %s for his bet\n",p->pseudo);
-	if(send(p->socket_fd,msg,strlen(msg),0) == -1){
-	  fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
-	  return;
+	for(int i = 0; i < tm->tables[table_no]->number_of_players; i++){
+	  if(send(tm->tables[table_no]->players[i]->socket_fd, msg, strlen(msg), 0) == -1){
+	    fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	    return;
+	  }
 	}
 
 	int numbytes; 
@@ -295,10 +360,17 @@ void* run_thread(void* args){
 	  tm->tables[table_no]->tour++;
 	  
 	}else if(strncmp(readbuf,"hit",3)==0){
+	  printf("HIT CARD SUM = %d\n",p->card_sum);
 	  card_t* c = get_card(tm->tables[table_no]->card_package);
+	  if(strcmp(c->symbol,"A") == 0 && p->card_sum <= 10){
+	    p->card_sum += 11;
+	  }else{
+	    p->card_sum += c->value;
+	  }
+	  
 	  char* str = card_to_string(c);
-	  char msg[30];
-	  memset(msg,0,30);
+	  char msg[50];
+	  memset(msg,0,50);
 	  int length = 13+strlen(str)+strlen(p->pseudo);
 	  sprintf(msg,"%d:asked_card=%s(%s)",length,str,p->pseudo);
 	  for(int j = 0; j< tm->tables[table_no]->number_of_players; j++){
@@ -312,53 +384,57 @@ void* run_thread(void* args){
 	  }
 	  p->card_ind++;
 	  p->cards[p->card_ind] = c;
-	  
+	  if(p->card_sum >= 21) tm->tables[table_no]->tour++;
 	}
       }
     }
 
     //compute cards sum
-
-    printf("cards : \n {");
-    int i = 0;
-    if(p == NULL) printf("NULL PLAYER\n");
-    while(p->cards[i] != NULL){
-      char* str = card_to_string(p->cards[i]);
-      printf(" %s ;",str);
-      i++;
-    }
-    printf(" }\n");
-    
-    int index = 0;
-    p->card_sum = 0;
-    while(p->cards[index] != NULL){
-      printf("counting cards\n");
-      if(strcmp(p->cards[index]->symbol,"A") == 0 && p->card_sum <=10){
-	p->card_sum += 11;
-      }else{
-	p->card_sum += p->cards[index]->value;
-	printf("card_value = %d ,index = %d\n",p->cards[index]->value,index);
+    if(p!=NULL){
+      printf("cards : \n {");
+      int i = 0;
+      if(p == NULL) printf("NULL PLAYER\n");
+      while(p->cards[i] != NULL){
+	char* str = card_to_string(p->cards[i]);
+	printf(" %s ;",str);
+	i++;
       }
-      index++;
+      printf(" }\n");
+      
+      int index = 0;
+      p->card_sum = 0;
+      while(p->cards[index] != NULL){
+	printf("counting cards\n");
+	if(strcmp(p->cards[index]->symbol,"A") == 0 && p->card_sum <=10){
+	  p->card_sum += 11;
+	}else{
+	  p->card_sum += p->cards[index]->value;
+	  printf("card_value = %d ,index = %d\n",p->cards[index]->value,index);
+	}
+	index++;
+      }
+
+      printf("CARDS SUM = %d FOR PLAYER %s\n",p->card_sum, p->pseudo);
     }
-
-    printf("CARDS SUM = %d FOR PLAYER %s\n",p->card_sum, p->pseudo);
-
     
     pthread_mutex_lock(&mutex);
     if(check_connectivity(p,60) == 0){
-      send_disconnected_to_all(tm->tables[table_no],p);//to implement
+      printf("after check_connectivity()\n");
+      send_disconnected_to_all(tm->tables[table_no],p);
+      printf("after send disconnected to all\n");
       for(int i = p->my_place; i < tm->tables[table_no]->number_of_players; i++){
 	tm->tables[table_no]->players[i]->my_place--;
       }
+      printf("before remove_player\n");
       remove_player(tm,table_no,p,pb);
+      printf("after remove player\n");
       p=NULL;
     }
     pthread_mutex_unlock(&mutex);
     //print_blackjack_tables(tm);
     sleep(1);//wait 1 second between frames
   }
-  
+  printf("ouside of while\n");
   pthread_exit(NULL);
 }
 
@@ -375,9 +451,10 @@ int main(int argc, char** argv){
   // card_package_t* card_package = init_card_package();
   //cp = *card_package;
 
-  pthread_t thread, thread1;
+  pthread_t thread[100], thread1;
   pthread_attr_t att;
   pthread_attr_init(&att);
+  pthread_attr_setdetachstate(&att, PTHREAD_CREATE_DETACHED);
   pthread_mutex_init(&mutex, NULL);
 
   if(argc != 2){
@@ -463,16 +540,19 @@ int main(int argc, char** argv){
     thread_data.tm = tm;
     thread_data.pb = pb;
 
-    rc = pthread_create(&thread,&att, run_thread , &thread_data);
+    rc = pthread_create(&thread[t],&att, run_thread , &thread_data);
     if (rc){
       printf("ERROR; return code from pthread_create() is %d\n", rc);
       exit(-1);
+    }else{
+      t++;
     }
-    
-    t++;
 
   }
-
+  printf("inside main server before ending\n");
+  /* for(int i = 0; i < t; i++){ */
+  /*   pthread_join(thread[i],NULL); */
+  /* } */
   //close thread and mutex resources
   pthread_mutex_destroy(&mutex);
   pthread_exit(NULL);

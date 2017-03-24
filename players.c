@@ -246,8 +246,11 @@ void send_disconnected_to_all(blackjack_table* table, player* p){
   sprintf(msg,"%d:player_disconnected=%s",l,p->pseudo);
   for(int i = 0; i<table->number_of_players; i++){
     if(strcmp(table->players[i]->pseudo,p->pseudo) != 0){
-      if(send(table->players[i]->socket_fd,msg,strlen(msg),0) == -1){
+      if(send(table->players[i]->socket_fd,msg,strlen(msg),MSG_NOSIGNAL) == -1){
 	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	if(errno == EPIPE){
+	  printf("BROKEN PIPE?\n");
+	}
 	return;
       }
     }

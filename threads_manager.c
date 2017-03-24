@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
 
 #include "threads_manager.h"
 
@@ -141,9 +144,13 @@ int check_connectivity(player* p, int timeout){
   //printf("\ninside check_connectivity()\n");
   char* isconnected_msg = "13:req_connected";
   
-  int sent = send(p->socket_fd,isconnected_msg,strlen(isconnected_msg),0);
+  int sent = send(p->socket_fd,isconnected_msg,strlen(isconnected_msg),MSG_NOSIGNAL);
   if( sent == -1){
     fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+    if(errno == EPIPE){
+      printf("BROKEN PIPE\n");
+      return 0;
+    }
     return -1;
   }
 

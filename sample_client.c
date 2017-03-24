@@ -93,8 +93,10 @@ int main(int argc, char** argv){
 
   char msg[2*MAXDATASIZE];
   memset(msg,0,2*MAXDATASIZE);
+
+  int keep_alive = 1;
   //main loop for the client
-  while(1){
+  while(keep_alive == 1){
     //system("clear");
     //at each step in the loop check connectivity
     message m = get_message(sockfd,msg,2*MAXDATASIZE);
@@ -178,31 +180,62 @@ int main(int argc, char** argv){
     
 
     if(m == req_bet){
-      printf("enter the amount of money you want to bet : ");
-      int b;
-      scanf("%d",&b);
-      int temp = b;
-      int nr_digits=0;
-      while(temp!=0){
-	temp /= 10;
-	nr_digits++;
-      }
-      char message[30];
-      memset(message,0,30);
-      sprintf(message,"send_bet:%d",b);
-      //printf(" bet message = %s",message);
-      if(send(sockfd,message,strlen(message),0) == -1){
-	fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
-	return;
-      }
 
-      for(int j = 0; j<game->number_of_players; j++){
-	if(strcmp(game->players_pseudos[j],game->my_pseudo) == 0){
-	  game->players_bets[j] = b;
-	  game->players_money[j] -= b;
-	  //game->players_actions[j] = BET;
-	  break;
+      char pseudo[20];
+      memset(pseudo,0,20);
+      int i = 8;
+      int k = 0;
+      while(msg[i] != ')'){
+	pseudo[k] = msg[i];
+	k++;
+	i++;
+      }
+      pseudo[k]='\0';
+
+      if(strcmp(game->my_pseudo,pseudo)==0){
+	for(int j = 0; j < game->number_of_players; j++){
+	  if(strcmp(game->players_pseudos[j],pseudo) == 0){
+	    game->is_playing[j] = 1;
+	  }else{
+	    game->is_playing[j] = 0;
+	  }
 	}
+	
+	printf("enter the amount of money you want to bet : ");
+	int b;
+	scanf("%d",&b);
+	int temp = b;
+	int nr_digits=0;
+	while(temp!=0){
+	  temp /= 10;
+	  nr_digits++;
+	}
+	char message[30];
+	memset(message,0,30);
+	sprintf(message,"send_bet:%d",b);
+	//printf(" bet message = %s",message);
+	if(send(sockfd,message,strlen(message),0) == -1){
+	  fprintf(stderr,"send: error while sending : %s\n", strerror(errno));
+	  return;
+	}
+	
+	for(int j = 0; j<game->number_of_players; j++){
+	  if(strcmp(game->players_pseudos[j],game->my_pseudo) == 0){
+	    game->players_bets[j] = b;
+	    game->players_money[j] -= b;
+	    //game->players_actions[j] = BET;
+	    break;
+	  }
+	}
+      }else{
+	for(int j = 0; j < game->number_of_players; j++){
+	  if(strcmp(game->players_pseudos[j],pseudo) == 0){
+	    game->is_playing[j] = 1;
+	  }else{
+	    game->is_playing[j] = 0;
+	  }
+	}
+
       }
     }
 
@@ -285,8 +318,19 @@ int main(int argc, char** argv){
 	}
 	
       }else{
+	printf("\nplay_turn\n\n");
 	for(int j = 0; j < game->number_of_players; j++){
 	  if(strcmp(game->players_pseudos[j],pseudo) == 0){
+	    if(strncmp(pseudo,"dealer",6) == 0){
+	      /*
+	      int k = 0;
+	      while(game->players_cards[j][k] != NULL){
+		if(game->players_cards[j][k]->hidden == 1) reveal_card(game->players_cards[j][k]);
+		k++;
+	      }
+	      */
+	      reveal_card(game->players_cards[j][1]);
+	    }
 	    game->is_playing[j] = 1;
 	  }else{
 	    game->is_playing[j] = 0;
@@ -317,7 +361,7 @@ int main(int argc, char** argv){
 
     
     if(m == asked_card){
-      printf("PLAYER CALLED A HIT ACTION\n");
+      //printf("PLAYER CALLED A HIT ACTION\n");
       //update client game
       //printf("inside hit_action\n");
       char pseudo[20];
@@ -372,13 +416,32 @@ int main(int argc, char** argv){
       }
     }
 
-    /* if(m == hit_action){ */
-    /*   printf("inside HIT code\n"); */
-    /* } */
-
-    /* if(m == stand_action){ */
-      
-    /* } */
+    if(m == end_game){
+      //printf("the game is finished\n");
+      if(game->cards_sum[game->my_tour_number] > 21){
+	printf("YOU LOST\n");
+	game->players_bets[game->my_tour_number] = 0;
+      }else if(game->cards_sum[game->my_tour_number] == 21){
+	if(game->cards_sum[0] == 21){ //dealer
+	  printf("TIE\n");
+	  game->players_money[game->my_tour_number] += game->players_bets[game->my_tour_number];
+	  game->players_bets[game->my_tour_number] = 0;
+	}else{
+	  printf("YOU WIN\n");
+	  game->players_money[game->my_tour_number] += 2 * game->players_bets[game->my_tour_number];
+	  game->players_bets[game->my_tour_number] = 0;
+	}
+      }else{
+	if(game->cards_sum[0] >= game->cards_sum[game->my_tour_number]){
+	  printf("YOU LOST\n");
+	  game->players_bets[game->my_tour_number] = 0;
+	}else{
+	  printf("YOU WIN\n");
+	  game->players_money[game->my_tour_number] += game->players_bets[game->my_tour_number];
+	}
+      }
+      keep_alive = 0;
+    }
   
     //update the sum
     for(int i = 0; i< game->number_of_players; i++){
@@ -395,6 +458,7 @@ int main(int argc, char** argv){
 	}
 	index++;
       }
+      //set lost status
     }
     if(m == req_connected){
       send_keep_connection(sockfd);

@@ -20,6 +20,7 @@ typedef enum{
   asked_card,
   hit_action,
   stand_action,
+  end_game,
   unknown
 } message;
 

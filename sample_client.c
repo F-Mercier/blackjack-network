@@ -432,7 +432,7 @@ int main(int argc, char** argv){
 	  game->players_bets[game->my_tour_number] = 0;
 	}
       }else{
-	if(game->cards_sum[0] >= game->cards_sum[game->my_tour_number]){
+	if(game->cards_sum[0] >= game->cards_sum[game->my_tour_number] && game->cards_sum[0] <= 21){
 	  printf("YOU LOST\n");
 	  game->players_bets[game->my_tour_number] = 0;
 	}else{
